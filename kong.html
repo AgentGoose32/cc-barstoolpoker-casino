@@ -309,8 +309,9 @@ body { background:#000; color:#fff; font-family:Georgia,serif; overflow:hidden; 
     flex:1;
     height:100%;
     border-radius:4px;
-    border:none;
-    background: transparent;
+    border: none;
+    box-shadow: inset 0 0 0 3px rgba(255,255,0, var(--cell-dbg-opacity, 0));
+    background-color: rgba(255,0,0, var(--cell-dbg-fill, 0));
     cursor:not-allowed;
     display:flex; align-items:center; justify-content:center;
     transition:transform 0.12s;
@@ -675,71 +676,20 @@ body { background:#000; color:#fff; font-family:Georgia,serif; overflow:hidden; 
 </div>
 </div>
 
-<!-- Debug panel (medium only) -->
-<div id="debugPanel" style="position:fixed;top:0;right:0;width:240px;height:100vh;overflow-y:auto;background:rgba(0,0,0,0.95);border-left:1px solid #555;padding:10px;z-index:9999;color:#ccc;display:none;box-sizing:border-box;">
-
-    <div style="color:#ffd700;font-weight:bold;border-bottom:1px solid #444;padding-bottom:4px;margin-bottom:8px;font-size:12px;">MEDIUM DEBUG &mdash; [D] to close</div>
-
-    <div class="dbg-sec">&#9656; GRID PADDING</div>
-    <div class="ds"><div class="dl"><span>Pad Top</span><span id="dv-gpt" class="dv">171px</span></div>
-        <input id="dbg-gpt" type="range" min="50" max="400" step="1" value="171" oninput="db('--grid-pad-top','px',this,'dv-gpt')"></div>
-    <div class="ds"><div class="dl"><span>Pad Bottom</span><span id="dv-gpb" class="dv">130px</span></div>
-        <input id="dbg-gpb" type="range" min="50" max="400" step="1" value="130" oninput="db('--grid-pad-bottom','px',this,'dv-gpb')"></div>
-    <div class="ds"><div class="dl"><span>Pad Left</span><span id="dv-gpl" class="dv">127px</span></div>
-        <input id="dbg-gpl" type="range" min="50" max="300" step="1" value="127" oninput="db('--grid-pad-left','px',this,'dv-gpl')"></div>
-    <div class="ds"><div class="dl"><span>Pad Right</span><span id="dv-gpr" class="dv">138px</span></div>
-        <input id="dbg-gpr" type="range" min="50" max="300" step="1" value="138" oninput="db('--grid-pad-right','px',this,'dv-gpr')"></div>
-
-    <div class="dbg-sec">&#9656; MULTIPLIER POSITION</div>
-    <div class="ds"><div class="dl"><span>Mult Y (up = more neg)</span><span id="dv-my" class="dv">-650px</span></div>
-        <input id="dbg-my" type="range" min="-900" max="200" step="1" value="-650" oninput="db('--mult-y','px',this,'dv-my')"></div>
-    <div class="ds"><div class="dl"><span>Mult X</span><span id="dv-mx" class="dv">4px</span></div>
-        <input id="dbg-mx" type="range" min="-200" max="200" step="1" value="4" oninput="db('--mult-x','px',this,'dv-mx')"></div>
-    <div class="ds"><div class="dl"><span>Mult Scale</span><span id="dv-ms" class="dv">1.45</span></div>
-        <input id="dbg-ms" type="range" min="0.5" max="3" step="0.05" value="1.45" oninput="dbFloat('--mult-scale',this,'dv-ms')"></div>
-
-    <div class="dbg-sec">&#9656; CELL &amp; ROW GAP</div>
-    <div class="ds"><div class="dl"><span>Cell Gap</span><span id="dv-cg" class="dv">-35px</span></div>
-        <input id="dbg-cg" type="range" min="-80" max="20" step="1" value="-35" oninput="db('--cell-gap','px',this,'dv-cg')"></div>
-    <div class="ds"><div class="dl"><span>Row Gap</span><span id="dv-rg" class="dv">-21px</span></div>
-        <input id="dbg-rg" type="range" min="-60" max="20" step="1" value="-21" oninput="db('--row-gap','px',this,'dv-rg')"></div>
-
-    <div class="dbg-sec">&#9656; COLUMN X OFFSETS</div>
-    <div class="ds"><div class="dl"><span>Col 1 (left)</span><span id="dv-c1" class="dv">14px</span></div>
-        <input id="dbg-c1" type="range" min="-150" max="150" step="1" value="14" oninput="dbCol(0,this,'dv-c1')"></div>
-    <div class="ds"><div class="dl"><span>Col 2 (right)</span><span id="dv-c2" class="dv">6px</span></div>
-        <input id="dbg-c2" type="range" min="-150" max="150" step="1" value="6" oninput="dbCol(1,this,'dv-c2')"></div>
-
-    <div class="dbg-sec">&#9656; SEAL ROW Y OFFSETS</div>
-    <div class="ds"><div class="dl"><span>Row 9 (top)</span><span id="dv-r9" class="dv">9px</span></div>
-        <input id="dbg-r9" type="range" min="-80" max="150" step="1" value="9" oninput="dbRow(9,this,'dv-r9')"></div>
-    <div class="ds"><div class="dl"><span>Row 8</span><span id="dv-r8" class="dv">8px</span></div>
-        <input id="dbg-r8" type="range" min="-80" max="150" step="1" value="8" oninput="dbRow(8,this,'dv-r8')"></div>
-    <div class="ds"><div class="dl"><span>Row 7</span><span id="dv-r7" class="dv">8px</span></div>
-        <input id="dbg-r7" type="range" min="-80" max="150" step="1" value="8" oninput="dbRow(7,this,'dv-r7')"></div>
-    <div class="ds"><div class="dl"><span>Row 6</span><span id="dv-r6" class="dv">4px</span></div>
-        <input id="dbg-r6" type="range" min="-80" max="150" step="1" value="4" oninput="dbRow(6,this,'dv-r6')"></div>
-    <div class="ds"><div class="dl"><span>Row 5</span><span id="dv-r5" class="dv">5px</span></div>
-        <input id="dbg-r5" type="range" min="-80" max="150" step="1" value="5" oninput="dbRow(5,this,'dv-r5')"></div>
-    <div class="ds"><div class="dl"><span>Row 4</span><span id="dv-r4" class="dv">6px</span></div>
-        <input id="dbg-r4" type="range" min="-80" max="150" step="1" value="6" oninput="dbRow(4,this,'dv-r4')"></div>
-    <div class="ds"><div class="dl"><span>Row 3</span><span id="dv-r3" class="dv">5px</span></div>
-        <input id="dbg-r3" type="range" min="-80" max="150" step="1" value="5" oninput="dbRow(3,this,'dv-r3')"></div>
-    <div class="ds"><div class="dl"><span>Row 2</span><span id="dv-r2" class="dv">5px</span></div>
-        <input id="dbg-r2" type="range" min="-80" max="150" step="1" value="5" oninput="dbRow(2,this,'dv-r2')"></div>
-    <div class="ds"><div class="dl"><span>Row 1 (btm)</span><span id="dv-r1" class="dv">4px</span></div>
-        <input id="dbg-r1" type="range" min="-80" max="150" step="1" value="4" oninput="dbRow(1,this,'dv-r1')"></div>
-
-    <button onclick="copyDebugValues()" style="width:100%;padding:6px;background:#1a1a0a;border:1px solid #888;color:#ffd700;cursor:pointer;font-size:11px;border-radius:3px;margin-top:10px;">COPY VALUES</button>
-    <textarea id="copyOut" readonly style="width:100%;height:70px;background:#111;border:1px solid #333;color:#aaa;font-size:9px;padding:4px;resize:none;margin-top:6px;box-sizing:border-box;"></textarea>
+<!-- Debug panel: box opacity only -->
+<div id="debugPanel" style="position:fixed;top:8px;right:8px;width:200px;background:rgba(0,0,0,0.92);border:1px solid #555;border-radius:6px;padding:10px;z-index:9999;color:#ccc;display:none;box-sizing:border-box;font-size:11px;">
+    <div style="color:#ffd700;font-weight:bold;margin-bottom:8px;font-size:11px;">BOX OPACITY &mdash; [D] close</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;color:#aaa;">
+        <span>Border</span><span id="dv-bop" style="color:#ffd700;font-weight:bold;">0</span>
+    </div>
+    <input type="range" min="0" max="1" step="0.01" value="0" style="width:100%;height:16px;cursor:pointer;margin-bottom:10px;"
+        oninput="document.getElementById('dv-bop').textContent=this.value; document.documentElement.style.setProperty('--cell-dbg-opacity',this.value)">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;color:#aaa;">
+        <span>Fill</span><span id="dv-fop" style="color:#ffd700;font-weight:bold;">0</span>
+    </div>
+    <input type="range" min="0" max="0.35" step="0.005" value="0" style="width:100%;height:16px;cursor:pointer;"
+        oninput="document.getElementById('dv-fop').textContent=this.value; document.documentElement.style.setProperty('--cell-dbg-fill',this.value)">
 </div>
-
-<style>
-.ds { margin-bottom:10px; }
-.dl { display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; color:#aaa; }
-.dv { color:#ffd700; font-weight:bold; }
-.dbg-sec { color:#ffa040; font-size:10px; letter-spacing:1px; margin:10px 0 6px; }
-#debugPanel input[type=range] { width:100%; height:16px; cursor:pointer; }
 </style>
 
 <script>
@@ -757,7 +707,7 @@ const PHASES = { BET:'bet', PLAY:'play', RESULT:'result' };
 // Cell graphics
 const IMG_SEAL  = 'https://drive.google.com/thumbnail?id=1GrxD7swShsgmQYFfTVS3ve6uWWwmSl75&sz=w200';
 const BG_3COL   = 'https://drive.google.com/thumbnail?id=10AEBQZVNL8zFweGXRV9Jm0coydus5FSv&sz=w1400';
-const BG_2COL   = 'https://raw.githubusercontent.com/TestamentsTCG/HoH-Casino/gh-pages/bg_2col.png';
+const BG_2COL   = 'https://drive.google.com/thumbnail?id=1k23Fi0A-OThcYSkpKPLeA5yFF2NTb1U2&sz=w1400';
 const IMG_SAFE  = 'https://drive.google.com/thumbnail?id=1h3NVXyIG8R8BV8yRGOEFdGlDH6Q1O4QZ&sz=w200';
 const IMG_TRAP  = 'https://drive.google.com/thumbnail?id=1hjbdNUzcH2ogdzrTLE_CqXh2w4_Ej_zL&sz=w200';
 
@@ -788,7 +738,7 @@ function cellImg(src){
     const sz  = s.getPropertyValue('--img-size').trim() || '88%';
     const ox  = s.getPropertyValue('--cell-img-offset-x').trim() || '0px';
     const oy  = s.getPropertyValue('--cell-img-offset-y').trim() || '0px';
-    return `<img src="${src}" style="width:${sz};height:${sz};object-fit:contain;pointer-events:none;position:relative;left:${ox};top:${oy};">`;
+    return `<img src="${src}" style="width:${sz};height:${sz};object-fit:contain;pointer-events:none;position:relative;z-index:5;left:${ox};top:${oy};">`;
 }
 
 // ---- STATE ----
@@ -963,6 +913,7 @@ function clickCell(row, col){
             document.getElementById('chooseDisp').style.display = 'none';
             renderBalDisp();
             updateRowStates();
+            revealUnclickedCells();
             setTimeout(() => showResult(true, ROWS), 300);
         } else {
             updateRowStates();
@@ -983,6 +934,22 @@ function revealAllTraps(clearedUpTo){
             if(trapCols.includes(i)){
                 c.classList.add('trap-revealed');
                 c.innerHTML = cellImg(IMG_TRAP);
+            }
+        });
+    }
+}
+
+function revealUnclickedCells(){
+    for(let r = 1; r <= ROWS; r++){
+        const rowEl = document.getElementById(`row-${r}`);
+        if(!rowEl) continue;
+        const trapCols = G.traps[r];
+        const cells = rowEl.querySelectorAll('.cell');
+        cells.forEach((c, i) => {
+            if(!c.classList.contains('chosen-safe') && !c.classList.contains('chosen-trap')){
+                const isTrap = trapCols.includes(i);
+                c.classList.add(isTrap ? 'trap-revealed' : 'safe');
+                c.innerHTML = cellImg(isTrap ? IMG_TRAP : IMG_SAFE);
             }
         });
     }
@@ -1199,90 +1166,11 @@ function renderWinDisp(){
     document.getElementById('winDisp').innerHTML = '';
 }
 
-// ---- DEBUG (MEDIUM) ----
-function db(cssVar, unit, input, labelId){
-    const val = input.value;
-    document.getElementById(labelId).textContent = val + unit;
-    document.documentElement.style.setProperty(cssVar, val + unit);
-}
-
-function dbFloat(cssVar, input, labelId){
-    const val = parseFloat(input.value);
-    document.getElementById(labelId).textContent = val;
-    document.documentElement.style.setProperty(cssVar, val);
-}
-
-function dbRow(rowNum, input, labelId){
-    const val = parseInt(input.value);
-    document.getElementById(labelId).textContent = val + 'px';
-    rowOffsets[rowNum - 1] = val;
-    const rowEl = document.getElementById(`row-${rowNum}`);
-    if(rowEl) rowEl.style.transform = `translateY(${val}px)`;
-}
-
-function dbCol(colIdx, input, labelId){
-    const val = parseInt(input.value);
-    document.getElementById(labelId).textContent = val + 'px';
-    colOffsets[colIdx] = val;
-    for(let r = 1; r <= ROWS; r++){
-        const cell = document.getElementById(`cell-${r}-${colIdx}`);
-        if(cell) cell.style.transform = `translateX(${val}px)`;
-    }
-}
-
-function syncDebugSliders(){
-    const cs = getComputedStyle(document.documentElement);
-    const gv = v => (document.documentElement.style.getPropertyValue(v) || cs.getPropertyValue(v)).trim().replace('px','');
-    // Grid padding
-    [['gpt','--grid-pad-top'],['gpb','--grid-pad-bottom'],['gpl','--grid-pad-left'],['gpr','--grid-pad-right']].forEach(([k,v]) => {
-        const val = gv(v);
-        document.getElementById('dbg-'+k).value = val;
-        document.getElementById('dv-'+k).textContent = val + 'px';
-    });
-    // Multiplier position
-    const myVal = gv('--mult-y'); document.getElementById('dbg-my').value = myVal; document.getElementById('dv-my').textContent = myVal + 'px';
-    const mxVal = gv('--mult-x'); document.getElementById('dbg-mx').value = mxVal; document.getElementById('dv-mx').textContent = mxVal + 'px';
-    const msVal = (document.documentElement.style.getPropertyValue('--mult-scale') || cs.getPropertyValue('--mult-scale')).trim();
-    document.getElementById('dbg-ms').value = msVal; document.getElementById('dv-ms').textContent = msVal;
-    // Cell gap, row gap
-    const cgVal = gv('--cell-gap'); document.getElementById('dbg-cg').value = cgVal; document.getElementById('dv-cg').textContent = cgVal + 'px';
-    const rgVal = gv('--row-gap'); document.getElementById('dbg-rg').value = rgVal; document.getElementById('dv-rg').textContent = rgVal + 'px';
-    // Col offsets (live array, 2 cols for medium)
-    [0,1].forEach(i => {
-        document.getElementById('dbg-c'+(i+1)).value = colOffsets[i];
-        document.getElementById('dv-c'+(i+1)).textContent = colOffsets[i] + 'px';
-    });
-    // Row offsets (live array)
-    for(let r = 1; r <= 9; r++){
-        document.getElementById('dbg-r'+r).value = rowOffsets[r-1];
-        document.getElementById('dv-r'+r).textContent = rowOffsets[r-1] + 'px';
-    }
-}
-
-function copyDebugValues(){
-    const cs = getComputedStyle(document.documentElement);
-    const gv = v => (document.documentElement.style.getPropertyValue(v) || cs.getPropertyValue(v)).trim();
-    let out = `// Medium grid padding\n`;
-    out += `--grid-pad-top:${gv('--grid-pad-top')}; --grid-pad-bottom:${gv('--grid-pad-bottom')};\n`;
-    out += `--grid-pad-left:${gv('--grid-pad-left')}; --grid-pad-right:${gv('--grid-pad-right')};\n`;
-    out += `--cell-gap:${gv('--cell-gap')}; --row-gap:${gv('--row-gap')};\n`;
-    out += `--mult-y:${gv('--mult-y')}; --mult-x:${gv('--mult-x')}; --mult-scale:${gv('--mult-scale')};\n`;
-    out += `// colOffsets (medium): [${colOffsets.slice(0,2).join(', ')}]\n`;
-    out += `medium: [${rowOffsets.join(',')}],`;
-    document.getElementById('copyOut').value = out;
-    try{ navigator.clipboard.writeText(out); }catch(e){}
-}
-
-// D key = toggle medium debug panel
+// D key = toggle box opacity debug panel
 document.addEventListener('keydown', e => {
     if(e.code === 'KeyD' && !e.target.matches('input,textarea,select')){
         const panel = document.getElementById('debugPanel');
-        const open = panel.style.display !== 'none';
-        if(!open){
-            setMode('medium');
-            syncDebugSliders();
-        }
-        panel.style.display = open ? 'none' : 'block';
+        panel.style.display = panel.style.display !== 'none' ? 'none' : 'block';
     }
 });
 
