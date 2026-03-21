@@ -5,8 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Heroes of Holdem - Casino</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    #crash-overlay{ display:none; position:fixed; top:0; left:0; width:100%; background:rgba(200,0,0,0.92);
+      color:#fff; font-family:monospace; font-size:13px; padding:12px; z-index:99999;
+      white-space:pre-wrap; word-break:break-all; max-height:40vh; overflow-y:auto; }
+  </style>
 </head>
 <body>
+  <div id="crash-overlay"></div>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      const el = document.getElementById('crash-overlay');
+      el.style.display = 'block';
+      el.textContent = 'ERROR: ' + msg + '\nFile: ' + src + ' Line: ' + line + '\n' + (err ? err.stack : '');
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      const el = document.getElementById('crash-overlay');
+      el.style.display = 'block';
+      el.textContent = 'PROMISE ERROR: ' + e.reason;
+    });
+  </script>
   <div id="game-container">
     <div id="game-modal">
       <iframe id="game-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
