@@ -57,8 +57,8 @@ const ZONES = [
   {
     id: 'uth',
     label: 'Ultimate Texas\nHold\'em',
-    x: 715, y: 555,
-    w: 150, h: 80,
+    x: 662, y: 470,
+    w: 151, h: 59,
     type: 'game',
     url: './uth-test.html'
   },
