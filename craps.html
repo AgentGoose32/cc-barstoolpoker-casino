@@ -147,9 +147,9 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 
 <div class="msg-box neutral" id="msgBox">Place your bets — Pass Line to begin</div>
 <div class="hint">
-  <strong style="color:#4aff7a">PASS/COME ODDS</strong> → 4/10 pay 2:1 &nbsp;·&nbsp; 5/9 pay 3:2 &nbsp;·&nbsp; 6/8 pay 6:5 &nbsp;|&nbsp;
-  <strong style="color:#ff8888">DON'T PASS/COME LAY ODDS</strong> → 4/10 risk 2:win 1 &nbsp;·&nbsp; 5/9 risk 3:win 2 &nbsp;·&nbsp; 6/8 risk 6:win 5 &nbsp;|&nbsp;
-  Click Come/DC badge on number to add odds
+  <strong style="color:#4aff7a">PASS/COME ODDS (3-4-5x)</strong>: 4/10 max 3x→pays 2:1 &nbsp;·&nbsp; 5/9 max 4x→pays 3:2 &nbsp;·&nbsp; 6/8 max 5x→pays 6:5 &nbsp;|&nbsp;
+  <strong style="color:#ff8888">LAY ODDS</strong>: 4/10 pay 1:2 &nbsp;·&nbsp; 5/9 pay 2:3 &nbsp;·&nbsp; 6/8 pay 5:6 &nbsp;|&nbsp;
+  Click Come/DC badge on number box to add odds
 </div>
 
 <div class="table-area">
@@ -351,6 +351,13 @@ const dontComeOdds= {};  // Lay odds behind Don't Come bets (inverse)
 const PASS_ODDS  = {4:2, 5:3/2, 6:6/5, 8:6/5, 9:3/2, 10:2};
 const LAY_ODDS   = {4:1/2, 5:2/3, 6:5/6, 8:5/6, 9:2/3, 10:1/2};
 
+// 3-4-5x max odds: flat bet × multiplier = max odds allowed
+// Result: max WIN is always 6× your flat bet regardless of point
+const MAX_ODDS_MULT = {4:3, 5:4, 6:5, 8:5, 9:4, 10:3};
+// Don't Pass/Come lay odds max WIN = 3× flat bet (risk more, win less since 7 is favored)
+// Max lay = 3× flat / LAY_ODDS[pt], e.g. 4/10 → risk 6× to win 3×
+function maxLayBet(flatBet, num){ return Math.round(flatBet * 3 / LAY_ODDS[num]); }
+
 // ── AUDIO ──
 const bgAmbience = document.getElementById('bgAmbience');
 bgAmbience.volume = 0.4;
@@ -372,10 +379,20 @@ function placeBet(id){
   if(rolling) return;
   if((id==='passline'||id==='dontpass') && phase==='point'){ showMsg("Pass/Don't Pass: come-out only",'neutral'); return; }
   if((id==='come'||id==='dontcome') && phase==='comeout'){ showMsg("Come bets: after point is set only",'neutral'); return; }
-  if(id==='passodds'){ if(!bets.passline||phase==='comeout'){ showMsg('Need Pass Line bet + point set','neutral'); return; } }
-  if(id==='dontodds'){ if(!bets.dontpass||phase==='comeout'){ showMsg("Need Don't Pass bet + point set",'neutral'); return; } }
-  const cost=selectedChip; if(cost>balance){ showMsg('Not enough gold!','lose'); return; }
-  bets[id]=(bets[id]||0)+cost; balance-=cost;
+  if(id==='passodds'){
+    if(!bets.passline||phase==='comeout'){ showMsg('Need Pass Line bet + point set','neutral'); return; }
+    const maxO = bets.passline * MAX_ODDS_MULT[point];
+    if(bets.passodds >= maxO){ showMsg(`Max Pass odds: ${fmt(maxO)}g (${MAX_ODDS_MULT[point]}× flat bet)`,'neutral'); return; }
+    if(bets.passodds + selectedChip > maxO){ selectedChip = maxO - bets.passodds; }
+  }
+  if(id==='dontodds'){
+    if(!bets.dontpass||phase==='comeout'){ showMsg("Need Don't Pass bet + point set",'neutral'); return; }
+    const maxO = maxLayBet(bets.dontpass, point);
+    if(bets.dontodds >= maxO){ showMsg(`Max Lay odds reached: ${fmt(maxO)}g`,'neutral'); return; }
+    if(bets.dontodds + selectedChip > maxO){ selectedChip = maxO - bets.dontodds; }
+  }
+  if(selectedChip > balance){ showMsg('Not enough gold!','lose'); return; }
+  bets[id]=(bets[id]||0)+selectedChip; balance-=selectedChip;
   updateUI(); updateZoneStates();
 }
 
@@ -383,9 +400,13 @@ function placeBet(id){
 function addComeOdds(num){
   if(rolling) return;
   if(!comeBets[num]){ showMsg(`No Come bet on ${num}`,'neutral'); return; }
-  const cost=selectedChip; if(cost>balance){ showMsg('Not enough gold!','lose'); return; }
-  comeOdds[num]=(comeOdds[num]||0)+cost; balance-=cost;
-  showMsg(`Come odds on ${num}: ${fmtChip((comeOdds[num]||0))}g (pays ${oddsLbl(num)})`,'neutral');
+  const maxO = comeBets[num] * MAX_ODDS_MULT[num];
+  const cur = comeOdds[num]||0;
+  if(cur >= maxO){ showMsg(`Max Come odds on ${num}: ${fmt(maxO)}g (${MAX_ODDS_MULT[num]}× Come bet)`,'neutral'); return; }
+  let amt = Math.min(selectedChip, maxO - cur);
+  if(amt > balance){ showMsg('Not enough gold!','lose'); return; }
+  comeOdds[num] = cur + amt; balance -= amt;
+  showMsg(`Come odds on ${num}: ${fmtChip(comeOdds[num])}g — pays ${oddsLbl(num)} (max ${fmt(maxO)}g)`,'neutral');
   updateUI(); updateZoneStates();
 }
 
@@ -393,9 +414,13 @@ function addComeOdds(num){
 function addDCOdds(num){
   if(rolling) return;
   if(!dontCome[num]){ showMsg(`No Don't Come bet on ${num}`,'neutral'); return; }
-  const cost=selectedChip; if(cost>balance){ showMsg('Not enough gold!','lose'); return; }
-  dontComeOdds[num]=(dontComeOdds[num]||0)+cost; balance-=cost;
-  showMsg(`DC lay odds on ${num}: ${fmtChip(dontComeOdds[num]||0)}g`,'neutral');
+  const maxO = maxLayBet(dontCome[num], num);
+  const cur = dontComeOdds[num]||0;
+  if(cur >= maxO){ showMsg(`Max DC lay odds on ${num}: ${fmt(maxO)}g`,'neutral'); return; }
+  let amt = Math.min(selectedChip, maxO - cur);
+  if(amt > balance){ showMsg('Not enough gold!','lose'); return; }
+  dontComeOdds[num] = cur + amt; balance -= amt;
+  showMsg(`DC lay odds on ${num}: ${fmtChip(dontComeOdds[num])}g`,'neutral');
   updateUI(); updateZoneStates();
 }
 
@@ -614,15 +639,21 @@ function updateUI(){
   const dwin   = document.getElementById('dontodds-win');
   if(pratio){ pratio.textContent = point ? ratioLbl[point] : '—'; }
   if(pwin){
-    if(point && bets.passodds){ const w=Math.round(bets.passodds*PASS_ODDS[point]); pwin.textContent=`win +${fmtChip(w)}g`; }
-    else if(point && selectedChip){ const w=Math.round(selectedChip*PASS_ODDS[point]); pwin.textContent=`${fmtChip(selectedChip)}→+${fmtChip(w)}`; }
-    else { pwin.textContent=''; }
+    if(point && bets.passline){
+      const maxO = bets.passline * MAX_ODDS_MULT[point];
+      const rem = maxO - (bets.passodds||0);
+      if(bets.passodds){ const w=Math.round(bets.passodds*PASS_ODDS[point]); pwin.textContent=`+${fmtChip(w)}g · ${fmtChip(rem)} left`; }
+      else { pwin.textContent=`max ${fmtChip(maxO)}g (${MAX_ODDS_MULT[point]}x)`; }
+    } else { pwin.textContent=''; }
   }
   if(dratio){ dratio.textContent = point ? layLbl[point] : '—'; }
   if(dwin){
-    if(point && bets.dontodds){ const w=Math.round(bets.dontodds*LAY_ODDS[point]); dwin.textContent=`win +${fmtChip(w)}g`; }
-    else if(point && bets.dontpass && selectedChip){ const w=Math.round(selectedChip*LAY_ODDS[point]); dwin.textContent=`${fmtChip(selectedChip)}→+${fmtChip(w)}`; }
-    else { dwin.textContent=''; }
+    if(point && bets.dontpass){
+      const maxO = maxLayBet(bets.dontpass, point);
+      const rem = maxO - (bets.dontodds||0);
+      if(bets.dontodds){ const w=Math.round(bets.dontodds*LAY_ODDS[point]); dwin.textContent=`+${fmtChip(w)}g · ${fmtChip(rem)} left`; }
+      else { dwin.textContent=`max ${fmtChip(maxO)}g`; }
+    } else { dwin.textContent=''; }
   }
 }
 
