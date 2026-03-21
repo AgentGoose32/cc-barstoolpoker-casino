@@ -33,8 +33,17 @@ function angleTo8Dir(angleRad) {
   return 5; // NE
 }
 
-// Casino table/zone definitions - positioned to match 1024x1024 casino-floor.jpg
+// Casino table/zone definitions - positioned to match 900x900 casino-floor.jpg
 const ZONES = [
+  // Roulette table - upper-left area
+  {
+    id: 'roulette',
+    label: 'Roulette',
+    x: 200, y: 337,
+    w: 225, h: 135,
+    type: 'game',
+    url: './roulette.html'
+  },
   // Blackjack table - left semi-circular table
   {
     id: 'blackjack1',
