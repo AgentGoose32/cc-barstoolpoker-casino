@@ -51,7 +51,7 @@ const ZONES = [
     x: 185, y: 555,
     w: 140, h: 80,
     type: 'game',
-    url: 'https://htmlpreview.github.io/?https://gist.githubusercontent.com/TestamentsTCG/e576c2fcba7f4a1202dd751eee4515bd/raw/blackjack.html'
+    url: './blackjack.html'
   },
   // UTH table - right semi-circular
   {
@@ -60,7 +60,16 @@ const ZONES = [
     x: 715, y: 555,
     w: 150, h: 80,
     type: 'game',
-    url: 'https://htmlpreview.github.io/?https://gist.githubusercontent.com/TestamentsTCG/35d0b3ee2fe47e327215a2c781d7a5ff/raw/uth-test.html'
+    url: './uth-test.html'
+  },
+  // Dragon's Lair slot machine - center
+  {
+    id: 'kong',
+    label: "Dragon's Lair",
+    x: 455, y: 370,
+    w: 100, h: 100,
+    type: 'game',
+    url: './kong.html'
   },
   // Bar - full top width
   {
