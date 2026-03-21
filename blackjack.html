@@ -124,6 +124,12 @@ body { background:#000; color:#fff; font-family:Georgia,serif; overflow:hidden; 
     <span>Net P/L: <strong id="netPL" style="color:#ffd700">+0</strong>g &nbsp; Hands: <strong id="handsPlayed">0</strong></span>
   </div>
 
+  <!-- Mute button -->
+  <button id="muteBtn" onclick="toggleMute()" title="Toggle music" style="position:fixed;top:10px;right:12px;z-index:999;background:rgba(0,0,0,0.6);border:1px solid #4aff7a44;color:#ffd700;font-size:18px;padding:4px 9px;border-radius:6px;cursor:pointer;line-height:1;">🔊</button>
+
+  <!-- Background ambience -->
+  <audio id="bgAmbience" loop src="./casino-ambience.mp3"></audio>
+
   <!-- Dealer -->
   <div class="dealer-zone">
     <div class="dealer-hand-row">
@@ -286,6 +292,21 @@ function newGame(){
     G={ phase:PHASES.BET, dealer:[], hands:[{cards:[],bet:0,doubled:false,stood:false,splitAce:false}], active:0, splitCount:0, insured:0, lastBet };
     render();
 }
+
+// ── BACKGROUND MUSIC ──
+const bgAmbience = document.getElementById('bgAmbience');
+bgAmbience.volume = 0.45;
+let _muted = false;
+function toggleMute(){
+  _muted = !_muted;
+  bgAmbience.muted = _muted;
+  document.getElementById('muteBtn').textContent = _muted ? '🔇' : '🔊';
+}
+// Autoplay on first interaction
+function _startAmbience(){ bgAmbience.play().catch(()=>{}); document.removeEventListener('pointerdown',_startAmbience); document.removeEventListener('keydown',_startAmbience); }
+document.addEventListener('pointerdown', _startAmbience, {once:true});
+document.addEventListener('keydown', _startAmbience, {once:true});
+window.addEventListener('load', ()=>{ bgAmbience.play().catch(()=>{}); });
 
 // ── AUDIO ──
 let _ctx=null;
