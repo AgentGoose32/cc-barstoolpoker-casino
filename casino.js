@@ -90,6 +90,66 @@ let isMoving = false;
 let modalOpen = false;
 let debugMode = false;
 
+// ── AUDIO SYSTEM ──
+let _audioCtx = null;
+let _ambienceMuted = false;
+let _ambienceEl = null;
+let _footstepTimer = 0;
+const FOOTSTEP_INTERVAL = 380; // ms between steps at full speed
+
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+// UO-style stone floor footstep via Web Audio synthesis
+function playFootstep() {
+  if (_ambienceMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const sr = ctx.sampleRate;
+    const dur = 0.06;
+    const buf = ctx.createBuffer(1, Math.floor(sr * dur), sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    // High-pass + low-pass shape for stone tap
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 180;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';  lp.frequency.value = 1400;
+    const gain = ctx.createGain();
+    const t = ctx.currentTime;
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+    src.start(t); src.stop(t + dur);
+  } catch(e) {}
+}
+
+function initAmbience() {
+  if (_ambienceEl) return;
+  _ambienceEl = document.createElement('audio');
+  _ambienceEl.src = './casino-ambience.mp3';
+  _ambienceEl.loop = true;
+  _ambienceEl.volume = 0.4;
+  document.body.appendChild(_ambienceEl);
+  _ambienceEl.play().catch(() => {});
+}
+
+function toggleCasinoMute() {
+  _ambienceMuted = !_ambienceMuted;
+  if (_ambienceEl) _ambienceEl.muted = _ambienceMuted;
+  const btn = document.getElementById('casinoMuteBtn');
+  if (btn) btn.textContent = _ambienceMuted ? '🔇' : '🔊';
+}
+
+// Start ambience on first interaction
+document.addEventListener('pointerdown', function _firstClick() {
+  initAmbience();
+  document.removeEventListener('pointerdown', _firstClick);
+}, { once: true });
+
 // Torch/sconce sprite config
 const TORCH_SPRITE = {
   key: 'torch',
@@ -959,6 +1019,13 @@ class CasinoScene extends Phaser.Scene {
         const vy = Math.sin(angle) * PLAYER_SPEED;
         this.player.body.setVelocity(vx, vy);
         isMoving = true;
+
+        // Footstep sound
+        const now = this.time.now;
+        if (now - _footstepTimer > FOOTSTEP_INTERVAL) {
+          _footstepTimer = now;
+          playFootstep();
+        }
       }
     } else {
       this.player.body.setVelocity(0, 0);
