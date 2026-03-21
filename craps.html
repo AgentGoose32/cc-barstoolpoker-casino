@@ -118,7 +118,9 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 .chip-btn img{width:100%;height:100%;border-radius:50%;display:block;pointer-events:none;}
 .chip-btn:hover{transform:translateY(-3px);}
 .chip-btn.selected{transform:translateY(-5px) scale(1.1);border-color:#ffd700;box-shadow:0 0 12px rgba(255,215,0,0.5);}
-.btn-roll{margin-left:auto;padding:11px 32px;font-size:16px;font-family:Georgia,serif;font-weight:bold;background:linear-gradient(135deg,#1a6b1a,#2a9b2a);color:#ffd700;border:2px solid #4aff7a;border-radius:8px;cursor:pointer;letter-spacing:2px;}
+.hud-info{display:flex;flex-direction:column;justify-content:center;gap:3px;font-size:15px;font-family:Georgia,serif;letter-spacing:1px;margin-left:auto;padding:0 10px;color:#ccaa55;line-height:1.3;}
+.hud-info strong{font-size:16px;}
+.btn-roll{padding:11px 32px;font-size:16px;font-family:Georgia,serif;font-weight:bold;background:linear-gradient(135deg,#1a6b1a,#2a9b2a);color:#ffd700;border:2px solid #4aff7a;border-radius:8px;cursor:pointer;letter-spacing:2px;}
 .btn-roll:hover:not(:disabled){background:linear-gradient(135deg,#2a8b2a,#3ab53a);box-shadow:0 0 15px rgba(74,255,122,0.4);}
 .btn-roll:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-clear{padding:7px 14px;font-size:11px;font-family:Georgia,serif;background:rgba(100,20,20,0.6);color:#ff8888;border:1px solid #ff4a4a66;border-radius:6px;cursor:pointer;}
@@ -152,7 +154,7 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 <div class="bal-bar">
   <span>Balance: <strong id="balDisplay">100,000</strong>g</span>
   <span style="color:#aaa;font-size:11px;letter-spacing:2px;">PERILOUS LEGENDS &nbsp;·&nbsp; CRAPS</span>
-  <span>Bet: <strong id="betDisplay">0</strong>g &nbsp; Net: <strong id="netDisplay" style="color:#ffd700">+0</strong>g</span>
+  <span>Bet: <strong id="betDisplay">0</strong>g</span>
 </div>
 
 <div class="msg-box neutral" id="msgBox">Place your bets — Pass Line to begin</div>
@@ -327,10 +329,6 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 <div class="payout-bar empty" id="payoutBar">—</div>
 
 <div class="bottom-bar">
-  <div style="display:flex;flex-direction:column;justify-content:center;gap:2px;font-size:13px;letter-spacing:1px;margin-right:6px;flex-shrink:0;">
-    <span>Bal: <strong id="balDisplay" style="color:#ffd700;">100,000</strong>g</span>
-    <span>Bet: <strong id="betDisplay" style="color:#ffd700;">0</strong>g &nbsp; Net: <strong id="netDisplay" style="color:#ffd700;">+0</strong>g</span>
-  </div>
   <div class="chip-row">
     <button class="chip-btn selected" id="chip-sel-100"  onclick="selectChip(100)"><img  src="https://drive.google.com/thumbnail?id=1hx7VaQG7UFHtdOE_uGJ64cOuedd81n-x&sz=w120" alt="100"></button>
     <button class="chip-btn"          id="chip-sel-500"  onclick="selectChip(500)"><img  src="https://drive.google.com/thumbnail?id=1IJ7Lp03TQ7rJjetXNoUGq9TB5b8sJmTs&sz=w120" alt="500"></button>
@@ -341,6 +339,11 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
   <button class="btn-clear"    id="btnClear"   onclick="clearBets()">CLEAR</button>
   <button class="btn-remove"   id="btnRemove"  onclick="toggleRemove()">TAKE DOWN</button>
   <button class="btn-off"      id="btnOff"     onclick="togglePlaceOff()">BETS OFF</button>
+  <div class="hud-info">
+    <div>Bal: <strong id="balDisplay" style="color:#ffd700;">100,000</strong>g</div>
+    <div>Bet: <strong id="betDisplay" style="color:#ffd700;">0</strong>g</div>
+    <div>Roll Net: <strong id="netDisplay" style="color:#ffd700;">+0</strong>g</div>
+  </div>
   <button class="btn-roll"     id="btnRoll"    onclick="rollDice()">ROLL</button>
 </div>
 
@@ -351,6 +354,7 @@ let phase = 'comeout', point = null;
 let dice = [1,6];
 let removeMode = false;   // when true: clicking a bet removes it
 let placeOff = false;     // when true: place bets are off for next roll
+let rollNet = 0;          // net for current shooter session; resets on 7-out
 
 // Flat bets
 const bets = {
@@ -632,7 +636,7 @@ function resolveRoll(){
       if(bets.dontodds){ const w=Math.round(bets.dontodds*LAY_ODDS[point]); balance+=bets.dontodds+w; winTotal+=w; payouts.push(`Lay Odds +${fmt(w)}g`); bets.dontodds=0; }
       [4,5,6,8,9,10].forEach(n=>{ lose('place'+n, 'Place '+n); });
       showMsg("🎲 SEVEN OUT — Seven out! Line away!",'lose');
-      point=null; phase='comeout';
+      point=null; phase='comeout'; rollNet=0;
     } else {
       const calls={2:'Two',3:'Ace Deuce',4:'Little Joe',5:'Five',6:isHard?'Hard Six':'Six easy',8:isHard?'Hard Eight':'Eight easy',9:'Nine',10:isHard?'Hard Ten':'Ten easy',11:'Yo',12:'Boxcars'};
       showMsg(`🎲 ${total} — ${calls[total]||total}. Roll again!`,'neutral');
@@ -649,6 +653,8 @@ function resolveRoll(){
 }
 
 function showPayouts(wins,losses,winTotal,lostTotal,context){
+  rollNet += winTotal - lostTotal;
+  updateUI();
   const bar=document.getElementById('payoutBar');
   if(!bar) return;
   if(wins.length===0 && losses.length===0){ bar.textContent='—'; bar.className='payout-bar empty'; return; }
@@ -687,8 +693,8 @@ function updateUI(){
   document.getElementById('balDisplay').textContent=fmt(balance);
   const tb=Object.values(bets).reduce((a,b)=>a+b,0)+Object.values(comeBets).reduce((a,b)=>a+b,0)+Object.values(comeOdds).reduce((a,b)=>a+b,0)+Object.values(dontCome).reduce((a,b)=>a+b,0)+Object.values(dontComeOdds).reduce((a,b)=>a+b,0);
   document.getElementById('betDisplay').textContent=fmt(tb);
-  const net=balance-100000; const nd=document.getElementById('netDisplay');
-  nd.textContent=(net>=0?'+':'')+fmt(net)+'g'; nd.style.color=net>=0?'#4aff7a':'#ff4a4a';
+  const nd=document.getElementById('netDisplay');
+  nd.textContent=(rollNet>=0?'+':'')+fmt(rollNet)+'g'; nd.style.color=rollNet>0?'#4aff7a':rollNet<0?'#ff4a4a':'#ffd700';
 
   const chipMap={passline:'chip-passline',dontpass:'chip-dontpass',come:'chip-come',dontcome:'chip-dontcome',passodds:'chip-passodds',dontodds:'chip-dontodds',field:'chip-field',any7:'chip-any7',anycraps:'chip-anycraps',yo:'chip-yo',two:'chip-two',three:'chip-three',twelve:'chip-twelve',place4:'chip-place4',place5:'chip-place5',place6:'chip-place6',place8:'chip-place8',place9:'chip-place9',place10:'chip-place10',hard4:'chip-hard4',hard6:'chip-hard6',hard8:'chip-hard8',hard10:'chip-hard10'};
   for(const[k,id] of Object.entries(chipMap)){ const el=document.getElementById(id);if(!el)continue; const a=bets[k]||0; el.textContent=fmtChip(a); el.parentElement.classList.toggle('has-bet',a>0); }
