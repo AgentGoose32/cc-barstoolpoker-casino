@@ -4441,15 +4441,24 @@ function toggleDiceDbg() {
   const stop   = document.getElementById('diceMarkerStop');
   const start  = document.getElementById('diceMarkerStart');
   const bounce = document.getElementById('diceMarkerBounce');
-  const vis = diceDbgOn ? 'block' : 'none';
-  if(stop)   stop.style.display   = vis;
-  if(start)  start.style.display  = vis;
-  if(bounce) bounce.style.display = vis;
   if(diceDbgOn){
+    // Always reset to true screen center when opening
+    const cx = Math.round(window.innerWidth / 2);
+    const cy = Math.round(window.innerHeight / 2);
+    dicePos.x = cx; dicePos.y = cy;
+    dicePos.sx = 0; dicePos.sy = 0;
+    dicePos.bx = cx; dicePos.by = cy;
     applyDicePos();
-    _makeDraggable(stop, function(nx,ny){ dicePos.x=nx; dicePos.y=ny; applyDicePos(); });
-    _makeDraggable(start, function(nx,ny){ dicePos.sx=nx-dicePos.x; dicePos.sy=ny-dicePos.y; applyDicePos(); });
+    if(stop)   stop.style.display = 'block';
+    if(start)  start.style.display = 'block';
+    if(bounce) bounce.style.display = 'block';
+    _makeDraggable(stop,   function(nx,ny){ dicePos.x=nx;  dicePos.y=ny;  applyDicePos(); });
+    _makeDraggable(start,  function(nx,ny){ dicePos.sx=nx-dicePos.x; dicePos.sy=ny-dicePos.y; applyDicePos(); });
     _makeDraggable(bounce, function(nx,ny){ dicePos.bx=nx; dicePos.by=ny; applyDicePos(); });
+  } else {
+    if(stop)   stop.style.display = 'none';
+    if(start)  start.style.display = 'none';
+    if(bounce) bounce.style.display = 'none';
   }
 }
 
