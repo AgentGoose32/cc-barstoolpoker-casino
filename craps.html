@@ -1519,17 +1519,17 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 
 <!-- Dice debug panel -->
 <div id="diceDbgPanel">
-  <h3>?? Dice Position</h3>
-  <div style="font-size:9px;color:#aaa;margin-bottom:6px;">Set where dice land. Launch pos = offset from rest.</div>
-  <label>Rest X <input type="range" id="dx-x" min="0" max="1800" value="480" oninput="applyDicePos()"> <span class="val" id="dv-x">480</span></label>
-  <label>Rest Y <input type="range" id="dx-y" min="0" max="900"  value="20"  oninput="applyDicePos()"> <span class="val" id="dv-y">20</span></label>
-  <label>Launch X <input type="range" id="dx-sx" min="-400" max="400" value="160" oninput="applyDicePos()"> <span class="val" id="dv-sx">160</span></label>
-  <label>Launch Y <input type="range" id="dx-sy" min="-400" max="400" value="220" oninput="applyDicePos()"> <span class="val" id="dv-sy">220</span></label>
+  <h3 style="color:#4aff7a;">?? Drag the dice to position</h3>
+  <div style="font-size:9px;color:#aaa;margin-bottom:6px;">Dice are now draggable. Drag to rest position. Then TEST ROLL to set launch.</div>
+  <div style="font-size:10px;color:#fff;margin:4px 0;">Rest: <span id="dv-xy">x:480 y:20</span></div>
+  <div style="font-size:10px;color:#fff;margin:4px 0;">Launch offset: <span id="dv-sxy">sx:160 sy:220</span></div>
+  <label style="margin-top:4px;">Launch X <input type="range" id="dx-sx" min="-600" max="600" value="160" oninput="applyDicePos()"> <span class="val" id="dv-sx">160</span></label>
+  <label>Launch Y <input type="range" id="dx-sy" min="-600" max="600" value="220" oninput="applyDicePos()"> <span class="val" id="dv-sy">220</span></label>
   <div style="display:flex;gap:6px;margin-top:6px;">
     <button onclick="testDiceRoll()" style="flex:1;background:#1a4a1a;color:#4aff7a;border:1px solid #4aff7a;border-radius:4px;padding:4px;cursor:pointer;">TEST ROLL</button>
     <button onclick="copyDicePos()" style="flex:1;background:#333;color:#4af;border:1px solid #4af;border-radius:4px;padding:4px;cursor:pointer;">COPY</button>
   </div>
-  <textarea id="diceDbgOut" readonly style="width:100%;height:44px;background:#111;color:#4aff7a;border:1px solid #333;border-radius:4px;font-size:10px;font-family:monospace;margin-top:6px;resize:none;"></textarea>
+  <textarea id="diceDbgOut" readonly style="width:100%;height:36px;background:#111;color:#4aff7a;border:1px solid #333;border-radius:4px;font-size:10px;font-family:monospace;margin-top:6px;resize:none;"></textarea>
 </div>
 
 
@@ -4341,6 +4341,82 @@ function initAllDrag(){ BET_ZONE_IDS.forEach(initDragOnZone); }
 
 
 
+
+// -- DICE POSITION DEBUG --
+let diceDbgOn = false;
+const dicePos = { x: 480, y: 20, sx: 160, sy: 220 };
+let _diceDrag = null;
+
+function applyDicePos() {
+  const sxEl = document.getElementById('dx-sx');
+  const syEl = document.getElementById('dx-sy');
+  if(sxEl) dicePos.sx = +sxEl.value;
+  if(syEl) dicePos.sy = +syEl.value;
+  if(document.getElementById('dv-sx')) document.getElementById('dv-sx').textContent = dicePos.sx;
+  if(document.getElementById('dv-sy')) document.getElementById('dv-sy').textContent = dicePos.sy;
+  if(document.getElementById('dv-xy'))  document.getElementById('dv-xy').textContent  = 'x:'+dicePos.x+' y:'+dicePos.y;
+  if(document.getElementById('dv-sxy')) document.getElementById('dv-sxy').textContent = 'sx:'+dicePos.sx+' sy:'+dicePos.sy;
+  document.documentElement.style.setProperty('--dice-x', dicePos.x + 'px');
+  document.documentElement.style.setProperty('--dice-y', dicePos.y + 'px');
+  document.documentElement.style.setProperty('--d1-sx', dicePos.sx + 'px');
+  document.documentElement.style.setProperty('--d1-sy', dicePos.sy + 'px');
+  document.documentElement.style.setProperty('--d2-sx', (dicePos.sx - 40) + 'px');
+  document.documentElement.style.setProperty('--d2-sy', (dicePos.sy + 20) + 'px');
+}
+
+function testDiceRoll() {
+  const v1 = Math.ceil(Math.random()*6), v2 = Math.ceil(Math.random()*6);
+  drawDie('die1', v1); drawDie('die2', v2);
+  const rot1 =  360*(3+Math.floor(Math.random()*3));
+  const rot2 = -360*(2+Math.floor(Math.random()*3));
+  const w1 = document.getElementById('dieWrap1'), w2 = document.getElementById('dieWrap2');
+  w1.style.setProperty('--rot1', rot1+'deg'); w2.style.setProperty('--rot2', rot2+'deg');
+  w1.classList.remove('throwing1','throwing2'); w2.classList.remove('throwing1','throwing2');
+  void w1.offsetWidth;
+  w1.classList.add('throwing1'); w2.classList.add('throwing2');
+}
+
+function copyDicePos() {
+  const out = 'dicePos = { x:'+dicePos.x+', y:'+dicePos.y+', sx:'+dicePos.sx+', sy:'+dicePos.sy+' }';
+  document.getElementById('diceDbgOut').value = out;
+  navigator.clipboard.writeText(out).catch(()=>{});
+}
+
+function toggleDiceDbg() {
+  diceDbgOn = !diceDbgOn;
+  document.getElementById('diceDbgPanel').classList.toggle('visible', diceDbgOn);
+  const panel = document.querySelector('.dice-panel');
+  if(!panel) return;
+  if(diceDbgOn){
+    panel.style.pointerEvents = 'all';
+    panel.style.cursor = 'move';
+    panel.style.outline = '2px dashed #4aff7a';
+    panel.addEventListener('mousedown', _diceMD);
+  } else {
+    panel.style.pointerEvents = 'none';
+    panel.style.cursor = '';
+    panel.style.outline = '';
+    panel.removeEventListener('mousedown', _diceMD);
+  }
+}
+
+function _diceMD(e){
+  e.preventDefault();
+  _diceDrag = { startX: e.clientX, startY: e.clientY, ox: dicePos.x, oy: dicePos.y };
+  document.addEventListener('mousemove', _diceMM);
+  document.addEventListener('mouseup', _diceMU);
+}
+function _diceMM(e){
+  if(!_diceDrag) return;
+  dicePos.x = Math.round(_diceDrag.ox + (e.clientX - _diceDrag.startX));
+  dicePos.y = Math.round(_diceDrag.oy + (e.clientY - _diceDrag.startY));
+  applyDicePos();
+}
+function _diceMU(){
+  _diceDrag = null;
+  document.removeEventListener('mousemove', _diceMM);
+  document.removeEventListener('mouseup', _diceMU);
+}
 
 // "" INIT ""
 
