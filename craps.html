@@ -170,6 +170,14 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
 #dbgPanel textarea{width:100%;height:80px;background:#111;color:#4aff7a;border:1px solid #333;border-radius:4px;font-size:10px;font-family:monospace;margin-top:6px;resize:vertical;}
 #dbgPanel button{margin-top:4px;width:100%;padding:4px;background:#333;color:#ffd700;border:1px solid #ffd70055;border-radius:4px;cursor:pointer;font-size:11px;}
 #dbgPanel button:hover{background:#555;}
+
+/* Zone shapes */
+.shape-rounded { border-radius: 28px !important; }
+.shape-circle  { border-radius: 50% !important; }
+.shape-diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%) !important; }
+.shape-hex     { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%) !important; }
+.shape-octagon { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%) !important; }
+
 .dbg-toggle{position:fixed;bottom:10px;right:10px;z-index:9999;padding:5px 10px;background:rgba(0,0,0,0.7);border:1px solid #ffd70055;border-radius:4px;color:#ffd700;font-size:11px;cursor:pointer;}
 </style>
 </head>
@@ -352,6 +360,12 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
     PASS LINE &nbsp;·&nbsp; <span style="font-size:10px;color:#aaa;">7/11 wins · 2/3/12 loses · hit point before 7</span>
     <span class="bet-chip" id="chip-passline">0</span>
   </div>
+  <!-- NEW zones -->
+  <div class="prop-box bet-zone-overlay shape-rounded" id="z-horn"  onclick="placeBet('horn')"><span class="pname">HORN</span><span class="podds" style="font-size:9px;">2/12:27:4&middot;3/11:3:1</span><span class="bet-chip" id="chip-horn">0</span></div>
+  <div class="prop-box bet-zone-overlay shape-circle"  id="z-big6"  onclick="placeBet('big6')" style="border-color:rgba(100,255,100,0.35);color:#88ffaa;"><span class="pname">BIG 6</span><span class="podds">1:1</span><span class="bet-chip" id="chip-big6">0</span></div>
+  <div class="prop-box bet-zone-overlay shape-circle"  id="z-big8"  onclick="placeBet('big8')" style="border-color:rgba(100,255,100,0.35);color:#88ffaa;"><span class="pname">BIG 8</span><span class="podds">1:1</span><span class="bet-chip" id="chip-big8">0</span></div>
+  <div class="prop-box bet-zone-overlay shape-hex"     id="z-ce"    onclick="placeBet('ce')"   style="border-color:rgba(255,160,50,0.4);color:#ffcc77;"><span class="pname">C&amp;E</span><span class="podds" style="font-size:9px;">C:3:1&middot;E:7:1</span><span class="bet-chip" id="chip-ce">0</span></div>
+  <div class="prop-box bet-zone-overlay shape-octagon" id="z-world" onclick="placeBet('world')" style="border-color:rgba(200,80,255,0.4);color:#dd99ff;"><span class="pname">WORLD</span><span class="podds" style="font-size:9px;">7:push&middot;2/12:26:5</span><span class="bet-chip" id="chip-world">0</span></div>
 </div>
 
 <!-- Debug toggle button -->
@@ -379,6 +393,11 @@ canvas.die{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.7);display:bloc
     <option value="dontodds">Lay Odds</option>
     <option value="field">Field</option>
     <option value="passline">Pass Line</option>
+    <option value="horn">Horn</option>
+    <option value="big6">Big 6</option>
+    <option value="big8">Big 8</option>
+    <option value="ce">C&amp;E</option>
+    <option value="world">World</option>
   </select>
   <label>Left (X) <input type="range" id="bz-x" min="0" max="1920" value="20"  oninput="applyBetZone()"> <span class="val" id="bv-x">20</span>px</label>
   <label>Top  (Y) <input type="range" id="bz-y" min="0" max="1080" value="400" oninput="applyBetZone()"> <span class="val" id="bv-y">400</span>px</label>
@@ -403,7 +422,8 @@ const bets = {
   passodds:0, dontodds:0, field:0,
   any7:0, anycraps:0, yo:0, two:0, three:0, twelve:0,
   place4:0, place5:0, place6:0, place8:0, place9:0, place10:0,
-  hard4:0, hard6:0, hard8:0, hard10:0
+  hard4:0, hard6:0, hard8:0, hard10:0,
+  horn:0, big6:0, big8:0, ce:0, world:0
 };
 
 // Travelling bets: {4: amount, 5: amount, ...}
@@ -465,6 +485,11 @@ function placeBet(id){
     if(bets.passodds >= maxO){ showMsg(`Max Pass odds: ${fmt(maxO)}g (${MAX_ODDS_MULT[point]}× flat bet)`,'neutral'); return; }
     if(bets.passodds + selectedChip > maxO){ selectedChip = maxO - bets.passodds; }
   }
+  if(['horn','big6','big8','ce','world'].includes(id)){
+    if(selectedChip>balance){ showMsg('Not enough gold!','lose'); return; }
+    bets[id]=(bets[id]||0)+selectedChip; balance-=selectedChip;
+    updateUI(); updateZoneStates(); return;
+  }
   if(id==='dontodds'){
     if(!bets.dontpass||phase==='comeout'){ showMsg("Need Don't Pass bet + point set",'neutral'); return; }
     const maxO = maxLayBet(bets.dontpass, point);
@@ -481,7 +506,7 @@ function removeBet(id){
   // Pass Line cannot be taken down after point is established (house rule)
   if(id==='passline' && phase==='point'){ showMsg("Pass Line can't be taken down after point is set",'neutral'); return; }
   // Come bets on numbers can't be taken down
-  if(id.startsWith('place') || id==='passodds' || id==='dontodds' || id==='passline' || id==='dontpass' || id==='come' || id==='dontcome' || id.startsWith('hard') || id==='field' || id==='any7' || id==='anycraps' || id==='yo' || id==='two' || id==='three' || id==='twelve'){
+  if(id.startsWith('place') || id==='passodds' || id==='dontodds' || id==='passline' || id==='dontpass' || id==='come' || id==='dontcome' || id.startsWith('hard') || id==='field' || id==='any7' || id==='anycraps' || id==='yo' || id==='two' || id==='three' || id==='twelve' || ['horn','big6','big8','ce','world'].includes(id)){
     const b=bets[id]||0; if(!b){ showMsg('No bet to remove','neutral'); return; }
     balance+=b; bets[id]=0;
     updateUI(); updateZoneStates();
@@ -577,6 +602,30 @@ function resolveRoll(){
   if(bets.two){      if(total===2)                collect('two',30,'Snake Eyes');  else lose('two','2'); }
   if(bets.three){    if(total===3)                collect('three',15,'Ace Deuce'); else lose('three','3'); }
   if(bets.twelve){   if(total===12)               collect('twelve',30,'Boxcars');  else lose('twelve','12'); }
+
+  // ── Horn (2/3/11/12: 2&12 pay 27:4, 3&11 pay 3:1) ──
+  if(bets.horn){
+    if([2,3,11,12].includes(total)){
+      const rate=[2,12].includes(total)?27/4:3;
+      collect('horn',rate,'Horn');
+    } else { lose('horn','Horn'); }
+  }
+  // ── Big 6 / Big 8 (pays 1:1, loses on 7, push otherwise) ──
+  if(bets.big6){ if(total===6) collect('big6',1,'Big 6'); else if(total===7) lose('big6','Big 6'); }
+  if(bets.big8){ if(total===8) collect('big8',1,'Big 8'); else if(total===7) lose('big8','Big 8'); }
+  // ── C&E (2/3/12 pays 3:1, 11 pays 7:1, else lose) ──
+  if(bets.ce){
+    if([2,3,12].includes(total)) collect('ce',3,'C&E Craps');
+    else if(total===11) collect('ce',7,'C&E Eleven');
+    else lose('ce','C&E');
+  }
+  // ── World (7=push, 2/12 pay 26:5, 3/11 pay 11:5, else lose) ──
+  if(bets.world){
+    if(total===7){ /* push — no win no loss */ }
+    else if([2,12].includes(total)) collect('world',26/5,'World');
+    else if([3,11].includes(total)) collect('world',11/5,'World');
+    else lose('world','World');
+  }
 
   // ── Hardways ──
   [[4,7],[6,9],[8,9],[10,7]].forEach(([n,pay])=>{
@@ -737,7 +786,7 @@ function updateUI(){
   const nd=document.getElementById('netDisplay');
   nd.textContent=(rollNet>=0?'+':'')+fmt(rollNet)+'g'; nd.style.color=rollNet>0?'#4aff7a':rollNet<0?'#ff4a4a':'#ffd700';
 
-  const chipMap={passline:'chip-passline',dontpass:'chip-dontpass',come:'chip-come',dontcome:'chip-dontcome',passodds:'chip-passodds',dontodds:'chip-dontodds',field:'chip-field',any7:'chip-any7',anycraps:'chip-anycraps',yo:'chip-yo',two:'chip-two',three:'chip-three',twelve:'chip-twelve',place4:'chip-place4',place5:'chip-place5',place6:'chip-place6',place8:'chip-place8',place9:'chip-place9',place10:'chip-place10',hard4:'chip-hard4',hard6:'chip-hard6',hard8:'chip-hard8',hard10:'chip-hard10'};
+  const chipMap={passline:'chip-passline',dontpass:'chip-dontpass',come:'chip-come',dontcome:'chip-dontcome',passodds:'chip-passodds',dontodds:'chip-dontodds',field:'chip-field',any7:'chip-any7',anycraps:'chip-anycraps',yo:'chip-yo',two:'chip-two',three:'chip-three',twelve:'chip-twelve',place4:'chip-place4',place5:'chip-place5',place6:'chip-place6',place8:'chip-place8',place9:'chip-place9',place10:'chip-place10',hard4:'chip-hard4',hard6:'chip-hard6',hard8:'chip-hard8',hard10:'chip-hard10',horn:'chip-horn',big6:'chip-big6',big8:'chip-big8',ce:'chip-ce',world:'chip-world'};
   for(const[k,id] of Object.entries(chipMap)){ const el=document.getElementById(id);if(!el)continue; const a=bets[k]||0; el.textContent=fmtChip(a); el.parentElement.classList.toggle('has-bet',a>0); }
 
   // Come bet indicators on number boxes
@@ -855,7 +904,7 @@ function applyAllZones(){
 }
 
 // ── BET ZONE DEBUG ──
-const BET_ZONE_IDS = ['dontpass','dontcome','come','any7','anycraps','yo','two','three','twelve','hard4','hard6','hard8','hard10','passodds','dontodds','field','passline'];
+const BET_ZONE_IDS = ['dontpass','dontcome','come','any7','anycraps','yo','two','three','twelve','hard4','hard6','hard8','hard10','passodds','dontodds','field','passline','horn','big6','big8','ce','world'];
 const betZoneData = {
   dontpass: {x:20,  y:100, w:680, h:46},
   dontcome: {x:710, y:100, w:100, h:46},
@@ -874,15 +923,22 @@ const betZoneData = {
   dontodds: {x:828, y:457, w:72,  h:37},
   field:    {x:20,  y:550, w:790, h:52},
   passline: {x:20,  y:612, w:790, h:52},
+  horn:     {x:20,  y:680, w:130, h:55, shape:'shape-rounded'},
+  big6:     {x:160, y:680, w:70,  h:70, shape:'shape-circle'},
+  big8:     {x:240, y:680, w:70,  h:70, shape:'shape-circle'},
+  ce:       {x:320, y:680, w:100, h:60, shape:'shape-hex'},
+  world:    {x:430, y:680, w:110, h:60, shape:'shape-octagon'},
 };
 let activeBetZone = 'dontpass';
 
+const SHAPES=['shape-rounded','shape-circle','shape-diamond','shape-hex','shape-octagon'];
 function applyAllBetZones(){
   BET_ZONE_IDS.forEach(id=>{
     const el=document.getElementById('z-'+id); if(!el) return;
     const d=betZoneData[id];
     el.style.left=d.x+'px'; el.style.top=d.y+'px';
     el.style.width=d.w+'px'; el.style.height=d.h+'px';
+    if(d.shape!==undefined){ SHAPES.forEach(s=>el.classList.remove(s)); if(d.shape) el.classList.add(d.shape); }
   });
 }
 
@@ -898,6 +954,7 @@ function selBetZone(id){
     const el=document.getElementById('z-'+bid);
     if(el) el.style.outline=bid===id?'2px dashed #ffd700':'1px dashed rgba(255,215,0,0.3)';
   });
+  const shapeEl=document.getElementById('bz-shape'); if(shapeEl) shapeEl.value=(betZoneData[id].shape||'');
 }
 
 function applyBetZone(){
@@ -909,7 +966,8 @@ function applyBetZone(){
   document.getElementById('bv-y').textContent=y;
   document.getElementById('bv-w').textContent=w;
   document.getElementById('bv-h').textContent=h;
-  betZoneData[activeBetZone]={x,y,w,h};
+  const shape=document.getElementById('bz-shape')?.value||'';
+  betZoneData[activeBetZone]={x,y,w,h,shape};
   applyAllBetZones();
 }
 
@@ -923,7 +981,8 @@ function toggleDbg(){
 function copyBetZones(){
   const lines=BET_ZONE_IDS.map(id=>{
     const d=betZoneData[id];
-    return `#z-${id}{left:${d.x}px;top:${d.y}px;width:${d.w}px;height:${d.h}px;}`;
+    const sc=d.shape?`, shape:'${d.shape}'`:'';
+    return `  ${id}: {x:${d.x}, y:${d.y}, w:${d.w}, h:${d.h}${sc}},`;
   });
   const out=lines.join('\n');
   document.getElementById('dbgOut').value=out;
