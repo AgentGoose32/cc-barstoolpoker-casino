@@ -33,59 +33,50 @@ function angleTo8Dir(angleRad) {
   return 5; // NE
 }
 
-// Casino table/zone definitions - positioned to match 900x900 casino-floor.jpg
+// Casino table/zone definitions - positioned to match 900x900 casino-floor.png
 const ZONES = [
   // Roulette table - upper-left
   {
     id: 'roulette',
     label: 'Roulette',
-    x: 222, y: 298,
-    w: 166, h: 69,
+    x: 224, y: 295,
+    w: 146, h: 53,
     type: 'game',
     url: './roulette.html'
   },
-  // Blackjack table - left semi-circular
+  // Blackjack table - middle-left semi-circular
   {
     id: 'blackjack1',
     label: 'Blackjack',
-    x: 215, y: 457,
-    w: 119, h: 48,
+    x: 214, y: 455,
+    w: 105, h: 41,
     type: 'game',
     url: './blackjack.html'
   },
-  // UTH table - right semi-circular
+  // UTH table - middle-right semi-circular
   {
     id: 'uth',
     label: 'Ultimate Texas\nHold\'em',
-    x: 662, y: 470,
-    w: 151, h: 59,
+    x: 669, y: 471,
+    w: 94, h: 58,
     type: 'game',
     url: './uth-test.html'
   },
-  // Dragon's Lair slot machine - center
+  // Dragon's Lair slot machine - upper-center
   {
     id: 'kong',
     label: "Dragon's Lair",
-    x: 441, y: 325,
-    w: 49, h: 92,
+    x: 440, y: 314,
+    w: 51, h: 96,
     type: 'game',
     url: './kong.html'
   },
-  // Craps table
+  // Craps table - upper-right
   {
     id: 'craps',
     label: 'Craps',
-    x: 450, y: 600,
-    w: 160, h: 70,
-    type: 'game',
-    url: './craps.html'
-  },
-  // Craps table - needs positioning by Mike
-  {
-    id: 'craps',
-    label: 'Craps',
-    x: 440, y: 580,
-    w: 160, h: 60,
+    x: 679, y: 299,
+    w: 132, h: 58,
     type: 'game',
     url: './craps.html'
   },
@@ -93,8 +84,8 @@ const ZONES = [
   {
     id: 'bar',
     label: 'Bar',
-    x: 452, y: 102,
-    w: 700, h: 130,
+    x: 450, y: 108,
+    w: 720, h: 180,
     type: 'coming_soon'
   }
 ];
@@ -219,7 +210,7 @@ class CasinoScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('casino-floor', 'casino-floor.jpg');
+    this.load.image('casino-floor', 'casino-floor.png');
 
     // Load torch/sconce spritesheet
     this.load.spritesheet(TORCH_SPRITE.key, TORCH_SPRITE.file, {
@@ -719,7 +710,7 @@ class CasinoScene extends Phaser.Scene {
   createDebugPanel() {
     const panelW = 280;
     const panelH = 380;
-    const panelX = 8;
+    const panelX = VIEW_W - panelW - 8;
     const panelY = VIEW_H - panelH - 8;
 
     // Panel background
