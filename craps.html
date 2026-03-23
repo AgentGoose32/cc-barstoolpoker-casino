@@ -4178,13 +4178,8 @@ function toggleDbg(){
 
 
       el.style.outline=id===activeBetZone?'3px dashed #ffd700':'1px dashed rgba(255,215,0,0.25)';
-
-
-
       el.style.cursor='move';
-
-
-
+      el.style.pointerEvents='all';
       injectResizeHandles(id);
 
 
@@ -4194,13 +4189,8 @@ function toggleDbg(){
 
 
       el.style.outline='';
-
-
-
       el.style.cursor='';
-
-
-
+      el.style.pointerEvents='';
       el.querySelectorAll('.dbg-resize-handle').forEach(h=>h.remove());
 
 
