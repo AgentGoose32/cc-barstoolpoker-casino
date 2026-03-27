@@ -872,9 +872,9 @@
       { label: '50,000g',      amount: 50000             },
     ];
 
-    let _wheelSpinning = false;
-    let _wheelAngle    = 0;
-    let _wheelAnimId   = null;
+    // Preload wheel image
+    const _wheelImg = new Image();
+    _wheelImg.src = 'assets/bonus/wheel.png';
 
     function drawWheel(angle) {
       const canvas = document.getElementById('wheelCanvas');
@@ -882,66 +882,20 @@
       const ctx = canvas.getContext('2d');
       const cx  = canvas.width  / 2;
       const cy  = canvas.height / 2;
-      const r   = cx - 4;
-      const n   = WHEEL_PRIZES.length; // 15
-      const arc = (2 * Math.PI) / n;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(angle);
-
-      // Outer gold ring
-      ctx.beginPath();
-      ctx.arc(0, 0, r + 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#b8860b';
-      ctx.fill();
-
-      // Draw slices
-      for (let i = 0; i < n; i++) {
-        const startA = i * arc - Math.PI / 2;
-        const endA   = startA + arc;
+      if (_wheelImg.complete && _wheelImg.naturalWidth > 0) {
+        ctx.drawImage(_wheelImg, -cx, -cy, canvas.width, canvas.height);
+      } else {
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, r, startA, endA);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? '#cc0000' : '#ffffff';
+        ctx.arc(0, 0, cx - 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd700';
         ctx.fill();
-        ctx.strokeStyle = '#b8860b';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        _wheelImg.onload = () => drawWheel(angle);
       }
-
-      // Draw labels
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      for (let i = 0; i < n; i++) {
-        const midA = i * arc - Math.PI / 2 + arc / 2;
-        const tx   = Math.cos(midA) * (r * 0.68);
-        const ty   = Math.sin(midA) * (r * 0.68);
-        ctx.save();
-        ctx.translate(tx, ty);
-        ctx.rotate(midA + Math.PI / 2);
-        const isRed = i % 2 === 0;
-        ctx.fillStyle = isRed ? '#ffffff' : '#000000';
-        ctx.font = 'bold 12px Arial';
-        ctx.shadowColor = isRed ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)';
-        ctx.shadowBlur = 3;
-        ctx.fillText(WHEEL_PRIZES[i].label, 0, 0);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-      }
-
       ctx.restore();
-
-      // Outer border ring
-      ctx.beginPath();
-      ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
       // Center cap
       ctx.beginPath();
       ctx.arc(cx, cy, 26, 0, Math.PI * 2);
@@ -950,11 +904,6 @@
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.stroke();
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 10px Georgia';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('SPIN', cx, cy);
     }
 
     // Spins awarded based on scatter count: 3->1, 4->3, 5->5
