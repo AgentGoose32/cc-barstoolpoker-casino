@@ -415,7 +415,7 @@
     };
 
     // "OPEN CHESTS" banner overlay
-    function showOpenChestsBanner(count, callback) {
+    window.showOpenChestsBanner = function showOpenChestsBanner(count, callback) {
       const banner = document.createElement('div');
       banner.id = 'openChestsBanner';
       banner.style.cssText = 'position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;' +
@@ -460,7 +460,9 @@
               if (total >= 3 || window._forceScatter) {
                 // Go straight to the prize wheel
                 origSetTO(() => {
-                  _lastWinScatters = total; const effectiveTotal = (window._forceScatter && total < 3) ? 3 : total; showOpenChestsBanner(effectiveTotal, () => startBonusRound(effectiveTotal));
+                  const effectiveTotal = (window._forceScatter && total < 3) ? 3 : total;
+                  window._lastWinScatters = effectiveTotal;
+                  window.showOpenChestsBanner(effectiveTotal, () => window.startBonusRound(effectiveTotal));
                 }, 800);
               }
             }
@@ -582,7 +584,7 @@
     let _bonusSpinsLeft = 0;
     let _betPerLine     = 100;
     let _lines          = 20;
-    let _lastWinScatters= 0;
+    window._lastWinScatters = 0; let _lastWinScatters = 0;
 
     // ---- Scatter Detection (single clean hook) ----
     // The engine sets label_win.innerHTML = "X scatter(s)" after a completed spin.
@@ -951,7 +953,7 @@
     let _wheelSpinsTotal     = 1;
     let _wheelSpinsRemaining = 0;
 
-    function scatterCountToSpins(count) {
+    window.scatterCountToSpins = function scatterCountToSpins(count) {
       if (count >= 5) return 5;
       if (count >= 4) return 3;
       return 1;
@@ -967,7 +969,7 @@
       }
     }
 
-    function startBonusRound(scatterCount) {
+    window.startBonusRound = function startBonusRound(scatterCount) {
       _wheelSpinning       = false;
       _wheelAngle          = 0;
       _wheelSpinsTotal     = scatterCountToSpins(scatterCount || _lastWinScatters || 3);
