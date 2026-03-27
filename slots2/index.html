@@ -248,60 +248,88 @@
 <body>
   <div id="slot-machine"></div>
 
-  <!-- SCATTER DETECTION: watch the win label for "scatter" text after spin completes -->
+  <!-- SCATTER SOUND: fires instantly whenever a scatter symbol is drawn to the reel canvas.
+       The engine pre-renders each symbol into HTMLCanvasElement objects (speed_frames).
+       We fingerprint scatter's canvas by replicating the engine's compositing, then hook
+       drawImage to match by pixel comparison. Once identified, cached in a WeakSet for speed. -->
   <script>
   (function() {
-    // Stubs kept for compatibility with the win observer below
+    const _origDraw = CanvasRenderingContext2D.prototype.drawImage;
+    const _isScatter    = new WeakSet();
+    const _isNotScatter = new WeakSet();
+    let   _refPixels    = null;
+    let   _cooldown     = false;
+
+    const SAMPLES = [[50,50],[100,100],[150,80],[80,150],[130,60]];
+
+    function sampleCanvas(canvas) {
+      try {
+        const ctx = canvas.getContext('2d');
+        return SAMPLES.map(([x, y]) => {
+          const d = ctx.getImageData(x, y, 1, 1).data;
+          return (d[0] << 16) | (d[1] << 8) | d[2];
+        });
+      } catch(e) { return null; }
+    }
+
+    function buildRef() {
+      let n = 0;
+      const bg  = new Image();
+      const sym = new Image();
+      function onLoad() {
+        if (++n < 2) return;
+        const c = document.createElement('canvas');
+        c.width = c.height = 200;
+        const ctx = c.getContext('2d');
+        // Replicate engine speed_frame[0]: draw sym_bg centered, then symbol centered
+        ctx.drawImage(bg,  Math.round((200 - bg.width)  / 2), Math.round((200 - bg.height)  / 2));
+        ctx.drawImage(sym, Math.round((200 - sym.width) / 2), Math.round((200 - sym.height) / 2));
+        _refPixels = sampleCanvas(c);
+      }
+      bg.onload  = sym.onload  = onLoad;
+      bg.onerror = sym.onerror = onLoad;
+      bg.src  = 'assets/images/slot-machine/sym_bg.png';
+      sym.src = 'assets/images/symbols/scatter.png';
+    }
+
+    function checkCanvas(canvas) {
+      if (_isScatter.has(canvas))    return true;
+      if (_isNotScatter.has(canvas)) return false;
+      if (!_refPixels)               return false;
+
+      const fp = sampleCanvas(canvas);
+      if (!fp) { _isNotScatter.add(canvas); return false; }
+
+      let diff = 0;
+      for (let i = 0; i < fp.length; i++) {
+        const ar = (_refPixels[i] >> 16) & 0xff, ag = (_refPixels[i] >> 8) & 0xff, ab = _refPixels[i] & 0xff;
+        const br = (fp[i] >> 16) & 0xff,         bg = (fp[i] >> 8) & 0xff,         bb = fp[i] & 0xff;
+        diff += Math.abs(ar-br) + Math.abs(ag-bg) + Math.abs(ab-bb);
+      }
+      const avg = diff / (fp.length * 3);
+
+      if (avg < 8) { _isScatter.add(canvas); return true; }
+      _isNotScatter.add(canvas); return false;
+    }
+
+    CanvasRenderingContext2D.prototype.drawImage = function(img) {
+      // Symbol speed_frame canvases are 200px wide, height 200-210 (low-to-mid speed)
+      if (!_cooldown && img instanceof HTMLCanvasElement &&
+          img.width === 200 && img.height >= 200 && img.height <= 210) {
+        if (checkCanvas(img)) {
+          _cooldown = true;
+          const snd = document.getElementById('sndScatter');
+          if (snd) { snd.currentTime = 0; snd.play().catch(() => {}); }
+          setTimeout(() => { _cooldown = false; }, 450);
+        }
+      }
+      return _origDraw.apply(this, arguments);
+    };
+
     window.__plGetScatterCount = function() { return 0; };
     window.__plResetScatterCount = function() {};
 
-    function playScatterSound() {
-      const snd = document.getElementById('sndScatter');
-      if (!snd) return;
-      snd.currentTime = 0;
-      snd.play().catch(() => {});
-    }
-
-    // Wait for the engine to build the DOM, then watch label_win for scatter results
-    function setupScatterLabelObserver() {
-      const poll = setInterval(() => {
-        const container = document.getElementById('slot-machine');
-        if (!container) return;
-        // Engine uses class prefix "smg-label_win"
-        const labelWin = container.querySelector('[class*="label_win"]');
-        if (!labelWin) return;
-        clearInterval(poll);
-
-        let _lastScatterTrigger = 0;
-
-        const obs = new MutationObserver(() => {
-          const text = (labelWin.textContent || labelWin.innerHTML || '').toLowerCase();
-          if (!text.includes('scatter')) return;
-
-          // Debounce: only fire once per spin result
-          const now = Date.now();
-          if (now - _lastScatterTrigger < 2000) return;
-          _lastScatterTrigger = now;
-
-          const match = text.match(/(\d+)\s*scatter/i);
-          const count = match ? parseInt(match[1]) : 3;
-          if (count >= 3) {
-            playScatterSound();
-            // Expose count for the chest overlay trigger below
-            window.__scatterCountForChests = count;
-          }
-        });
-
-        obs.observe(labelWin, { childList: true, subtree: true, characterData: true, attributes: true });
-      }, 400);
-    }
-
-    // Run after DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupScatterLabelObserver);
-    } else {
-      setupScatterLabelObserver();
-    }
+    buildRef();
   })();
   </script>
 
@@ -406,16 +434,12 @@
             wasActive = false;
             setTimeout(() => {
               if (_scatterWinActive) return;
-              // Read scatter count from label observer; fallback: parse label_win text directly
-              let count = window.__scatterCountForChests || 0;
-              if (!count) {
-                const container = document.getElementById('slot-machine');
-                const lbl = container && container.querySelector('[class*="label_win"]');
-                const text = lbl ? (lbl.textContent || '').toLowerCase() : '';
-                const m = text.match(/(\d+)\s*scatter/i);
-                count = m ? parseInt(m[1]) : 0;
-              }
-              window.__scatterCountForChests = 0; // reset
+              // Parse scatter count from the win label text
+              const container = document.getElementById('slot-machine');
+              const lbl = container && container.querySelector('[class*="label_win"]');
+              const text = lbl ? (lbl.textContent || lbl.innerHTML || '').toLowerCase() : '';
+              const m = text.match(/(\d+)\s*scatter/i);
+              const count = m ? parseInt(m[1]) : 0;
               if (count >= 3) {
                 _scatterWinActive = true;
                 setTimeout(() => { _scatterWinActive = false; triggerChestOverlay(count); }, 800);
