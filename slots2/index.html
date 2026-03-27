@@ -312,7 +312,7 @@
     const origDraw  = CanvasRenderingContext2D.prototype.drawImage;
     const scatterSet = new WeakSet();
 
-    const cfg         = window.slotMachineConfig;
+    // cfg is read lazily at spin time
     const STOP_DELAYS = [0, 500, 1000, 1500, 2000];
     const origSetTO   = window.setTimeout;
     const REEL_X      = [145, 373, 601, 829, 1057];
@@ -327,7 +327,7 @@
     let firedReels   = new Set();
     let burstTime    = -1;
 
-    function playScatterSound() {
+    window.playScatterSound = function playScatterSound() {
       const snd = document.getElementById('sndScatter');
       if (!snd) return;
       snd.currentTime = 0;
@@ -352,15 +352,15 @@
               if (!done && !isNaN(r) && r >= 0 && r < 100) {
                 done = true;
                 window.parseInt = origPI;
-                if (cfg && cfg.reels && cfg.symbols) {
-                  const strip = cfg.reels[reelIdx];
+                if (window.slotMachineConfig && window.slotMachineConfig.reels && window.slotMachineConfig.symbols) {
+                  const strip = window.slotMachineConfig.reels[reelIdx];
                   if (strip) {
                     for (let row = 0; row < 3; row++) {
-                      const sym = cfg.symbols[strip[(r + row) % strip.length]];
+                      const sym = window.slotMachineConfig.symbols[strip[(r + row) % strip.length]];
                       if (sym && sym.scatter) {
                         scatterReels.add(reelIdx);
                         // Fire sound DECEL_MS before visual snap
-                        origSetTO(playScatterSound, DECEL_MS);
+                        origSetTO(function(){ if(window.playScatterSound) window.playScatterSound(); }, DECEL_MS);
                         break;
                       }
                     }
@@ -591,7 +591,7 @@
     // We watch only that element for text changes. No polling, no reel-image scanning.
     let _scatterWinActive = false;
 
-    function playScatterSound() {
+    window.playScatterSound = function playScatterSound() {
       // Grab element at call time (DOM is ready by then)
       const snd = document.getElementById('sndScatter');
       if (!snd) return;
