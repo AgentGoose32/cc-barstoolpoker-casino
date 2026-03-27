@@ -248,28 +248,27 @@
 <body>
   <div id="slot-machine"></div>
 
-  <!-- SCATTER SOUND: fires when a reel STOPS and that reel contains a scatter symbol.
-       Phase 1 (loading): hooks drawImage to detect when scatter.png is composited onto
-       pre-rendered symbol canvases -- marks those canvases in a WeakSet (100% accurate).
-       Phase 2 (render): hooks drawImage again; when stop.wav fires (one per reel, in order),
-       opens a 400ms window and listens for a marked scatter canvas drawn at that reel's X col. -->
+  <!-- SCATTER SOUND: fires when a reel STOPS and that reel has a scatter in its final position.
+       Phase 1: marks scatter pre-rendered canvases via WeakSet during engine load.
+       Phase 2: on stop.wav, waits 2 frames (~33ms) for the stopped frame to render,
+       then does a ONE-SHOT check for scatter canvas at that exact reel column. -->
   <script>
   (function() {
     window.__plGetScatterCount = function() { return 0; };
     window.__plResetScatterCount = function() {};
 
-    const origDraw     = CanvasRenderingContext2D.prototype.drawImage;
-    const scatterSet   = new WeakSet();   // pre-rendered canvases that contain scatter symbol
+    const origDraw   = CanvasRenderingContext2D.prototype.drawImage;
+    const scatterSet = new WeakSet();
 
-    // Engine drawImage x for each reel: 245 + 228*idx - round(200/2) = 145 + 228*idx
+    // Internal canvas coords: x = 245 + 228*reelIdx - Math.round(img.width/2)
+    // For 200px-wide frames: x = 145 + 228*idx
     const REEL_X = [145, 373, 601, 829, 1057];
-    const X_TOL  = 60;
+    const X_TOL  = 30;  // tight: only exact reel position, not neighbours
 
-    let stopWindow   = false;   // true during ~400ms after a reel's stop.wav fires
-    let stopReelIdx  = -1;      // which reel (0-4) just stopped
-    let stopTimer    = null;
-    let reelCounter  = 0;       // increments 0-4 per spin, resets each new spin
-    let lastStopTime = 0;
+    // Per-reel check: after stop, did scatter draw here in one frame?
+    let checkReel  = -1;   // reel index we're currently checking (-1 = idle)
+    let reelCounter = 0;
+    let spinActive  = false;
 
     function playScatterSound() {
       const snd = document.getElementById('sndScatter');
@@ -279,23 +278,20 @@
     }
 
     CanvasRenderingContext2D.prototype.drawImage = function(img, x) {
-      // --- Phase 1: mark scatter canvases during symbol load ---
-      // Engine loads each symbol PNG as HTMLImageElement, then composites it
-      // onto pre-rendered frame canvases. When scatter.png is the source, mark
-      // the destination canvas (this.canvas) as a scatter canvas.
+      // Phase 1: tag scatter canvases when scatter.png is composited during load
       if (img instanceof HTMLImageElement &&
-          typeof img.src === 'string' && img.src.includes('scatter')) {
+          typeof img.src === 'string' && img.src.includes('scatter.png')) {
         scatterSet.add(this.canvas);
       }
 
-      // --- Phase 2: detect scatter canvas drawn at the reel that just stopped ---
-      if (stopWindow &&
+      // Phase 2: one-shot check after reel stop
+      if (checkReel >= 0 &&
           img instanceof HTMLCanvasElement &&
           scatterSet.has(img) &&
           typeof x === 'number' &&
-          Math.abs(x - REEL_X[stopReelIdx]) < X_TOL) {
-        stopWindow = false;
-        clearTimeout(stopTimer);
+          Math.abs(x - REEL_X[checkReel]) < X_TOL) {
+        const detected = checkReel;
+        checkReel = -1;
         playScatterSound();
       }
 
@@ -306,18 +302,26 @@
       if (!window.createjs || !window.createjs.Sound) return false;
 
       const origPlay = createjs.Sound.play;
-      createjs.Sound.play = function(id) {
-        if (typeof id === 'string' && id.endsWith('stop.wav')) {
-          const now = Date.now();
-          // Gap > 2s means a new spin just started -- reset counter
-          if (now - lastStopTime > 2000) reelCounter = 0;
-          lastStopTime = now;
+      createjs.Sound.play = function(id, props) {
+        if (typeof id === 'string') {
+          // New spin starting -- reset reel counter
+          if (id.endsWith('spin.wav') || id.endsWith('start.wav')) {
+            reelCounter = 0;
+            spinActive  = true;
+          }
+          // Each reel stop fires stop.wav exactly once, in order 0-4
+          if (id.endsWith('stop.wav') && spinActive) {
+            const reelIdx = reelCounter % 5;
+            reelCounter++;
+            if (reelCounter >= 5) spinActive = false;
 
-          stopReelIdx = reelCounter % 5;
-          reelCounter++;
-          stopWindow = true;
-          clearTimeout(stopTimer);
-          stopTimer = setTimeout(() => { stopWindow = false; }, 400);
+            // Wait 2 rAF frames (~33ms) for stopped frame to render, then open 1-frame window
+            setTimeout(() => {
+              checkReel = reelIdx;
+              // Close window after one frame -- don't leave it open
+              setTimeout(() => { if (checkReel === reelIdx) checkReel = -1; }, 32);
+            }, 33);
+          }
         }
         return origPlay.apply(this, arguments);
       };
