@@ -434,6 +434,8 @@
       banner.appendChild(sub);
       banner.appendChild(btn);
       document.body.appendChild(banner);
+      const sndBanner = document.getElementById('sndBonusBanner');
+      if (sndBanner) { sndBanner.currentTime = 0; sndBanner.play().catch(() => {}); }
     }
 
     function hookCreateJS() {
@@ -536,10 +538,11 @@
   </style>
 
   <!-- AUDIO -->
-  <audio id="sndChestGold"      src="assets/bonus/chest-gold.mp3"  preload="auto"></audio>
-  <audio id="sndChestBonus"     src="assets/bonus/chest-bonus.mp3" preload="auto"></audio>
-  <audio id="sndFireworks"      src="assets/bonus/fireworks.mp3"   preload="auto"></audio>
-  <audio id="sndScatter"        src="assets/bonus/scatter.mp3"     preload="auto"></audio>
+  <audio id="sndChestGold"      src="assets/bonus/chest-gold.mp3"    preload="auto"></audio>
+  <audio id="sndChestBonus"     src="assets/bonus/chest-bonus.mp3"  preload="auto"></audio>
+  <audio id="sndFireworks"      src="assets/bonus/fireworks.mp3"     preload="auto"></audio>
+  <audio id="sndScatter"        src="assets/bonus/scatter.mp3"       preload="auto"></audio>
+  <audio id="sndBonusBanner"    src="assets/bonus/bonus-banner.mp3"  preload="auto"></audio>
 
   <script>
   (function() {
