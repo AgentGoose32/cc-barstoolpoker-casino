@@ -55,6 +55,7 @@
     #slot-machine {
       flex: 1 1 auto;
       min-height: 0;
+      min-width: 0;
     }
 
     /* ===== CHEST OVERLAY ===== */
@@ -246,11 +247,12 @@
   </style>
 </head>
 <body>
+  <div id="logoBar" style="width:100%;text-align:center;background:#05020f;flex-shrink:0;line-height:0;">
+    <img id="hohLogo" src="assets/images/slot-machine/hoh-logo.png" alt="Heroes of Holdem"
+      style="height:160px;width:auto;pointer-events:none;
+             filter:drop-shadow(0 2px 12px rgba(0,0,0,0.7));" />
+  </div>
   <div id="slot-machine"></div>
-  <img id="hohLogo" src="assets/images/slot-machine/hoh-logo.png" alt="Heroes of Holdem"
-    style="position:fixed;top:0;left:50%;transform:translateX(-50%);
-           height:360px;width:auto;z-index:500;pointer-events:none;
-           filter:drop-shadow(0 2px 12px rgba(0,0,0,0.7));" />
 
   <!-- SCATTER SOUND: hybrid approach.
        Phase 1 (burst intercept): when the engine fires the 5 stopSpin setTimeouts, read each
