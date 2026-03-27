@@ -543,6 +543,7 @@
   <audio id="sndFireworks"      src="assets/bonus/fireworks.mp3"     preload="auto"></audio>
   <audio id="sndScatter"        src="assets/bonus/scatter.mp3"       preload="auto"></audio>
   <audio id="sndBonusBanner"    src="assets/bonus/bonus-banner.mp3"  preload="auto"></audio>
+  <audio id="sndWheelSpin"      src="assets/bonus/wheel-spin.mp3"    preload="auto" loop></audio>
 
   <script>
   (function() {
@@ -976,12 +977,14 @@
           _wheelAnimId = requestAnimationFrame(animate);
         } else {
           _wheelSpinning = false;
+          const _swsStop = document.getElementById('sndWheelSpin'); if(_swsStop){ _swsStop.pause(); _swsStop.currentTime=0; }
           showWheelResult(WHEEL_PRIZES[winner]);
         }
       }
 
       _wheelAnimId = requestAnimationFrame(animate);
       playBonusSound();
+      const _sws = document.getElementById('sndWheelSpin'); if(_sws){ _sws.currentTime=0; _sws.play().catch(()=>{}); }
     };
 
     function showWheelResult(prize) {
