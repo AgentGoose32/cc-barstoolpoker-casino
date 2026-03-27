@@ -430,11 +430,11 @@
           color:#ffd700;letter-spacing:6px;text-align:center;
           text-shadow:0 0 40px rgba(255,215,0,1),0 0 80px rgba(255,165,0,0.8);
           animation:pulseGold 0.8s ease-in-out infinite;">
-          ✦ OPEN CHESTS ✦
+          BONUS WHEEL!
         </div>
         <div style="font-family:Georgia,serif;font-size:1.4rem;color:#cc99ff;
           margin-top:16px;letter-spacing:3px;">
-          ${count} BONUS CHEST${count > 1 ? 'S' : ''} FOUND
+           ${count} WHEEL${count > 1 ? "S" : ""} - SPIN FOR PRIZES!
         </div>`;
       document.body.appendChild(banner);
       // Auto-dismiss after 1.8s then open chest overlay
@@ -463,10 +463,10 @@
             if (stopCount === 5) {
               spinActive = false;
               const total = scatterReels.size;
-              if (total >= 3) {
+              if (total >= 3 || window._forceScatter) {
                 // Go straight to the prize wheel
                 origSetTO(() => {
-                  _lastWinScatters = total; showOpenChestsBanner(total, () => startBonusRound(total));
+                  _lastWinScatters = total; const effectiveTotal = (window._forceScatter && total < 3) ? 3 : total; showOpenChestsBanner(effectiveTotal, () => startBonusRound(effectiveTotal));
                 }, 800);
               }
             }
