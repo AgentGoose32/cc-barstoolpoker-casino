@@ -363,15 +363,65 @@
       return origDraw.apply(this, arguments);
     };
 
+    // "OPEN CHESTS" banner overlay
+    function showOpenChestsBanner(count, callback) {
+      const banner = document.createElement('div');
+      banner.id = 'openChestsBanner';
+      banner.style.cssText = [
+        'position:fixed','inset:0','z-index:9998',
+        'display:flex','flex-direction:column',
+        'align-items:center','justify-content:center',
+        'background:rgba(0,0,0,0.75)',
+        'pointer-events:all'
+      ].join(';');
+      banner.innerHTML = `
+        <div style="font-family:Georgia,serif;font-size:4rem;font-weight:bold;
+          color:#ffd700;letter-spacing:6px;text-align:center;
+          text-shadow:0 0 40px rgba(255,215,0,1),0 0 80px rgba(255,165,0,0.8);
+          animation:pulseGold 0.8s ease-in-out infinite;">
+          ✦ OPEN CHESTS ✦
+        </div>
+        <div style="font-family:Georgia,serif;font-size:1.4rem;color:#cc99ff;
+          margin-top:16px;letter-spacing:3px;">
+          ${count} BONUS CHEST${count > 1 ? 'S' : ''} FOUND
+        </div>`;
+      document.body.appendChild(banner);
+      // Auto-dismiss after 1.8s then open chest overlay
+      origSetTO(() => {
+        banner.remove();
+        callback();
+      }, 1800);
+    }
+
     function hookCreateJS() {
       if (!window.createjs || !window.createjs.Sound) return false;
       const origPlay = createjs.Sound.play;
+      let stopCount = 0;
       createjs.Sound.play = function(id) {
-        if (typeof id === 'string' && (id.endsWith('spin.wav') || id.endsWith('start.wav'))) {
-          spinActive   = true;
-          scatterReels = new Set();
-          firedReels   = new Set();
-          burstTime    = -1;
+        if (typeof id === 'string') {
+          if (id.endsWith('spin.wav') || id.endsWith('start.wav')) {
+            spinActive  = true;
+            scatterReels = new Set();
+            firedReels  = new Set();
+            burstTime   = -1;
+            stopCount   = 0;
+          }
+          // After all 5 reels stop, check if 3+ bonus chests landed
+          if (id.endsWith('stop.wav') && spinActive) {
+            stopCount++;
+            if (stopCount === 5) {
+              spinActive = false;
+              const total = scatterReels.size;
+              if (total >= 3) {
+                // Wait for win display then show banner + chest overlay
+                origSetTO(() => {
+                  showOpenChestsBanner(total, () => {
+                    if (typeof triggerChestOverlay === 'function') triggerChestOverlay(total);
+                  });
+                }, 800);
+              }
+            }
+          }
         }
         return origPlay.apply(this, arguments);
       };
@@ -387,7 +437,7 @@
 
   <!-- CHEST OVERLAY -->
   <div id="chestOverlay">
-    <div id="chestTitle">✦ SCATTER BONUS ✦</div>
+    <div id="chestTitle">✦ BONUS CHESTS ✦</div>
     <div id="chestSubtitle">Click each chest — one may contain a Bonus Round!</div>
     <div id="chestRow"></div>
     <div id="chestMessage"></div>
@@ -458,8 +508,8 @@
     }
 
     function setupWinObserver() {
-      // The proto-level drawImage hook fires scatter sound as each reel locks.
-      // Here we just watch for spin end to trigger chests if 3+ scatters landed.
+      // Chest overlay is now triggered by the scatter sound hook above.
+      // This observer is kept as a no-op stub.
       const trySetup = setInterval(() => {
         const container = document.getElementById('slot-machine');
         if (!container) return;
@@ -475,26 +525,7 @@
         };
 
         const obs = new MutationObserver(() => {
-          const isActive = checkActive();
-          if (!wasActive && isActive) {
-            wasActive = true;
-            if (window.__plResetScatterCount) window.__plResetScatterCount();
-          } else if (wasActive && !isActive) {
-            wasActive = false;
-            setTimeout(() => {
-              if (_scatterWinActive) return;
-              // Parse scatter count from the win label text
-              const container = document.getElementById('slot-machine');
-              const lbl = container && container.querySelector('[class*="label_win"]');
-              const text = lbl ? (lbl.textContent || lbl.innerHTML || '').toLowerCase() : '';
-              const m = text.match(/(\d+)\s*scatter/i);
-              const count = m ? parseInt(m[1]) : 0;
-              if (count >= 3) {
-                _scatterWinActive = true;
-                setTimeout(() => { _scatterWinActive = false; triggerChestOverlay(count); }, 800);
-              }
-            }, 500);
-          }
+          // intentionally empty -- chest trigger handled by hookCreateJS stop counter
         });
 
         obs.observe(spinBtn, { attributes: true, subtree: true, attributeFilter: ['disabled', 'class', 'src'] });
