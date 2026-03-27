@@ -312,7 +312,7 @@
     const origDraw  = CanvasRenderingContext2D.prototype.drawImage;
     const scatterSet = new WeakSet();
 
-    // cfg is read lazily at spin time
+    const cfg         = window.slotMachineConfig;
     const STOP_DELAYS = [0, 500, 1000, 1500, 2000];
     const origSetTO   = window.setTimeout;
     const REEL_X      = [145, 373, 601, 829, 1057];
@@ -327,7 +327,7 @@
     let firedReels   = new Set();
     let burstTime    = -1;
 
-    window.playScatterSound = function playScatterSound() {
+    function playScatterSound() {
       const snd = document.getElementById('sndScatter');
       if (!snd) return;
       snd.currentTime = 0;
@@ -352,15 +352,15 @@
               if (!done && !isNaN(r) && r >= 0 && r < 100) {
                 done = true;
                 window.parseInt = origPI;
-                if (window.slotMachineConfig && window.slotMachineConfig.reels && window.slotMachineConfig.symbols) {
-                  const strip = window.slotMachineConfig.reels[reelIdx];
+                if (cfg && cfg.reels && cfg.symbols) {
+                  const strip = cfg.reels[reelIdx];
                   if (strip) {
                     for (let row = 0; row < 3; row++) {
-                      const sym = window.slotMachineConfig.symbols[strip[(r + row) % strip.length]];
+                      const sym = cfg.symbols[strip[(r + row) % strip.length]];
                       if (sym && sym.scatter) {
                         scatterReels.add(reelIdx);
                         // Fire sound DECEL_MS before visual snap
-                        origSetTO(function(){ if(window.playScatterSound) window.playScatterSound(); }, DECEL_MS);
+                        origSetTO(playScatterSound, DECEL_MS);
                         break;
                       }
                     }
@@ -415,27 +415,23 @@
     };
 
     // "OPEN CHESTS" banner overlay
-    window.showOpenChestsBanner = function showOpenChestsBanner(count, callback) {
+    function showOpenChestsBanner(count, callback) {
       const banner = document.createElement('div');
       banner.id = 'openChestsBanner';
-      banner.style.cssText = 'position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;' +
-        'align-items:center;justify-content:center;background:rgba(0,0,0,0.88);pointer-events:all;';
-      const spinCount = scatterCountToSpins(count);
-      banner.innerHTML =
-        '<div style="font-family:Georgia,serif;font-size:1.2rem;color:#cc99ff;letter-spacing:3px;margin-bottom:24px;text-align:center;">' +
-          count + ' WHEEL' + (count > 1 ? 'S' : '') + ' &mdash; ' + spinCount + ' SPIN' + (spinCount > 1 ? 'S' : '') + ' AWARDED' +
-        '</div>' +
-        '<img src="assets/bonus/btn-bonus-wheel.png" id="btnBonusWheel" ' +
-          'style="max-width:480px;width:80vw;cursor:pointer;border-radius:12px;' +
-          'box-shadow:0 0 60px rgba(255,215,0,0.7),0 0 120px rgba(255,165,0,0.4);' +
-          'transition:transform 0.1s;animation:pulseGold 1.2s ease-in-out infinite;" ' +
-          'onmouseover="this.style.transform='scale(1.05)'" ' +
-          'onmouseout="this.style.transform='scale(1)'" />';
+      banner.style.cssText = 'position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);pointer-events:all;';
+      const _spins = (count >= 5) ? 5 : (count >= 4) ? 3 : 1;
+      const sub = document.createElement('div');
+      sub.style.cssText = 'font-family:Georgia,serif;font-size:1.2rem;color:#cc99ff;letter-spacing:3px;margin-bottom:24px;text-align:center;';
+      sub.textContent = count + ' WHEEL' + (count > 1 ? 'S' : '') + ' \u2014 ' + _spins + ' SPIN' + (_spins > 1 ? 'S' : '') + ' AWARDED';
+      const btn = document.createElement('img');
+      btn.src = 'assets/bonus/btn-bonus-wheel.png';
+      btn.style.cssText = 'max-width:480px;width:80vw;cursor:pointer;border-radius:12px;box-shadow:0 0 60px rgba(255,215,0,0.7),0 0 120px rgba(255,165,0,0.4);animation:pulseGold 1.2s ease-in-out infinite;';
+      btn.onmouseover = function(){ this.style.transform='scale(1.05)'; };
+      btn.onmouseout  = function(){ this.style.transform='scale(1)'; };
+      btn.onclick = function() { banner.remove(); callback(); };
+      banner.appendChild(sub);
+      banner.appendChild(btn);
       document.body.appendChild(banner);
-      document.getElementById('btnBonusWheel').addEventListener('click', function() {
-        banner.remove();
-        callback();
-      });
     }
 
     function hookCreateJS() {
@@ -457,12 +453,11 @@
             if (stopCount === 5) {
               spinActive = false;
               const total = scatterReels.size;
+              const effectiveTotal = (window._forceScatter && total < 3) ? 3 : total;
               if (total >= 3 || window._forceScatter) {
                 // Go straight to the prize wheel
                 origSetTO(() => {
-                  const effectiveTotal = (window._forceScatter && total < 3) ? 3 : total;
-                  window._lastWinScatters = effectiveTotal;
-                  window.showOpenChestsBanner(effectiveTotal, () => window.startBonusRound(effectiveTotal));
+                  _lastWinScatters = effectiveTotal; showOpenChestsBanner(effectiveTotal, () => startBonusRound(effectiveTotal));
                 }, 800);
               }
             }
@@ -492,7 +487,7 @@
   <!-- BONUS ROUND OVERLAY - PRIZE WHEEL -->
   <div id="bonusOverlay">
     <div id="bonusTitle">âœ¦ BONUS WHEEL âœ¦</div>
-    <div id="bonusSubtitle">SPIN THE WHEEL — CLAIM YOUR PRIZE</div>
+    <div id="bonusSubtitle">SPIN THE WHEEL ï¿½ CLAIM YOUR PRIZE</div>
     <div id="bonusSpinsInfo" style="font-family:Georgia,serif;font-size:1.05rem;color:#ffd700;letter-spacing:2px;margin:6px 0 0;text-align:center;text-shadow:0 0 10px rgba(255,215,0,0.7);">?? 3 Wheels = 1 Spin &nbsp;|&nbsp; 4 Wheels = 3 Spins &nbsp;|&nbsp; 5 Wheels = 5 Spins</div>
     <div id="bonusSpinsLeft" style="font-family:Georgia,serif;font-size:1.3rem;color:#cc99ff;letter-spacing:2px;margin:4px 0 0;text-align:center;min-height:1.6rem;"></div>
     <div id="wheelWrap">
@@ -584,14 +579,14 @@
     let _bonusSpinsLeft = 0;
     let _betPerLine     = 100;
     let _lines          = 20;
-    window._lastWinScatters = 0; let _lastWinScatters = 0;
+    let _lastWinScatters= 0;
 
     // ---- Scatter Detection (single clean hook) ----
     // The engine sets label_win.innerHTML = "X scatter(s)" after a completed spin.
     // We watch only that element for text changes. No polling, no reel-image scanning.
     let _scatterWinActive = false;
 
-    window.playScatterSound = function playScatterSound() {
+    function playScatterSound() {
       // Grab element at call time (DOM is ready by then)
       const snd = document.getElementById('sndScatter');
       if (!snd) return;
@@ -953,7 +948,7 @@
     let _wheelSpinsTotal     = 1;
     let _wheelSpinsRemaining = 0;
 
-    window.scatterCountToSpins = function scatterCountToSpins(count) {
+    function scatterCountToSpins(count) {
       if (count >= 5) return 5;
       if (count >= 4) return 3;
       return 1;
@@ -969,7 +964,7 @@
       }
     }
 
-    window.startBonusRound = function startBonusRound(scatterCount) {
+    function startBonusRound(scatterCount) {
       _wheelSpinning       = false;
       _wheelAngle          = 0;
       _wheelSpinsTotal     = scatterCountToSpins(scatterCount || _lastWinScatters || 3);
@@ -1051,7 +1046,7 @@
         stopFireworks();
         if (_wheelSpinsRemaining > 0) {
           document.getElementById('bonusSpinBtn').disabled = false;
-          document.getElementById('wheelResult').textContent = msg + '  —  Spin again!';
+          document.getElementById('wheelResult').textContent = msg + '  ï¿½  Spin again!';
         } else {
           document.getElementById('bonusDoneBtn').style.display = 'inline-block';
           updateSpinsDisplay();
@@ -1127,17 +1122,17 @@
     // T/Y/U = chest overlay with 3/4/5 scatters
     // W     = go straight to the prize wheel
     document.addEventListener('keydown', (e) => {
-      if(e.key === 't' || e.key === 'T') { _lastWinScatters=3; showOpenChestsBanner(3, () => startBonusRound(3)); }
-      if(e.key === 'y' || e.key === 'Y') { _lastWinScatters=4; showOpenChestsBanner(4, () => startBonusRound(4)); }
-      if(e.key === 'u' || e.key === 'U') { _lastWinScatters=5; showOpenChestsBanner(5, () => startBonusRound(5)); }
+      if(e.key === 't' || e.key === 'T') showOpenChestsBanner(3, () => startBonusRound(3));
+      if(e.key === 'y' || e.key === 'Y') showOpenChestsBanner(4, () => startBonusRound(4));
+      if(e.key === 'u' || e.key === 'U') showOpenChestsBanner(5, () => startBonusRound(5));
       if(e.key === 'w' || e.key === 'W') startBonusRound(3);
       if(e.key === 'd' || e.key === 'D') {
         window._forceScatter = !window._forceScatter;
-        const _toast = document.createElement('div');
-        _toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#ffd700;padding:10px 24px;border-radius:8px;font-family:monospace;font-size:15px;z-index:99999;pointer-events:none;border:1px solid #ffd700;';
-        _toast.textContent = window._forceScatter ? 'DEBUG ON: 3 wheels forced every spin' : 'DEBUG OFF: normal mode';
-        document.body.appendChild(_toast);
-        setTimeout(() => _toast.remove(), 2500);
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#ffd700;padding:10px 24px;border-radius:8px;font-family:monospace;font-size:15px;z-index:99999;pointer-events:none;border:1px solid #ffd700;';
+        t.textContent = window._forceScatter ? 'DEBUG ON: bonus triggered every spin' : 'DEBUG OFF: normal mode';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
       }
     });
 
