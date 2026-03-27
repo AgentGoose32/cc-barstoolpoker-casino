@@ -284,7 +284,7 @@
     }
 
     // Deceleration time: approx ms from stopSpin call to visual snap (speed_max=4000, delta_stop_max=800)
-    const DECEL_MS = 350;
+    const DECEL_MS = 500;
 
     // Phase 1: intercept setTimeout burst, identify scatter reels, schedule sound AHEAD of visual snap
     window.setTimeout = function(fn, delay) {
