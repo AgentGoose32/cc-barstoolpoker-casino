@@ -984,6 +984,7 @@
       updateSpinsDisplay();
       drawWheel(0);
     }
+    window.startBonusRound = startBonusRound; // expose for cross-IIFE calls
 
     window.spinWheel = function() {
       if (_wheelSpinning || _wheelSpinsRemaining <= 0) return;
