@@ -559,22 +559,40 @@
         const img = sym.querySelector('img');
         if (img && img.src && img.src.includes('scatter')) {
           if (sym.querySelector('.scatter-spin-rules')) return;
-          // Center and enlarge the scatter entry
-          sym.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-            'width:100%;margin:0 auto;padding:16px 0;';
-          if (img) { img.style.cssText = 'width:200px;height:200px;display:block;margin:0 auto 12px;'; }
-          // Enlarge the payout text
-          const lines = sym.querySelectorAll('.smg-lines');
-          lines.forEach(function(l) { l.style.cssText = 'font-size:1.3rem;text-align:center;'; });
+
+          // Center the whole entry and make it span full width
+          sym.style.cssText = 'display:flex;flex-direction:column;align-items:center;' +
+            'justify-content:center;width:100%;margin:0 auto;padding:20px 0;';
+
+          // Enlarge image
+          img.style.cssText = 'width:200px;height:200px;display:block;margin:0 auto 14px;';
+
+          // Replace "Scatter" label with "Bonus Wheel"
+          const title = sym.querySelector('.smg-paytable-title, [class*="title"], [class*="name"]');
+          if (title) { title.textContent = 'Bonus Wheel'; title.style.cssText = 'font-size:1.2rem;font-weight:bold;text-align:center;color:#ffd700;margin-bottom:8px;'; }
+          // Also try span/div that just says "Scatter"
+          sym.querySelectorAll('span,div').forEach(function(el) {
+            if (el.children.length === 0 && el.textContent.trim() === 'Scatter') {
+              el.textContent = 'Bonus Wheel';
+              el.style.cssText = 'font-size:1.2rem;font-weight:bold;color:#ffd700;text-align:center;display:block;';
+            }
+          });
+
+          // Hide the engine payout lines (x3 Total bet x 13 etc)
+          sym.querySelectorAll('.smg-lines,[class*="lines"],[class*="line-count"]').forEach(function(l) {
+            l.style.display = 'none';
+          });
+
+          // Inject our own rules
           const note = document.createElement('div');
           note.className = 'scatter-spin-rules';
-          note.style.cssText = 'margin-top:12px;padding:10px 18px;background:rgba(255,215,0,0.12);' +
-            'border:1px solid rgba(255,215,0,0.4);border-radius:8px;font-size:1rem;' +
-            'color:#ffd700;line-height:1.8;text-align:center;';
-          note.innerHTML = '<b>BONUS WHEEL</b><br>' +
-            '3 Wheels = 1 Spin<br>' +
-            '4 Wheels = 3 Spins<br>' +
-            '5 Wheels = 5 Spins<br>' +
+          note.style.cssText = 'margin-top:10px;padding:12px 20px;background:rgba(255,215,0,0.1);' +
+            'border:1px solid rgba(255,215,0,0.5);border-radius:8px;font-size:1.1rem;' +
+            'color:#ffd700;line-height:2;text-align:center;';
+          note.innerHTML =
+            'x3 Wheels = 1 Spin<br>' +
+            'x4 Wheels = 3 Spins<br>' +
+            'x5 Wheels = 5 Spins<br>' +
             '<span style="color:#ff9999;font-size:0.85rem;">Must play all 20 lines</span>';
           sym.appendChild(note);
         }
