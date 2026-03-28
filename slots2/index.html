@@ -556,42 +556,40 @@
           }
         };
       });
-      // Hide scatter row entirely — we replace it with custom images below
-      symbols.forEach(function(sym) {
-        const txt = sym.textContent || '';
-        const img = sym.querySelector('img');
-        const hasScatter = (img && img.src && img.src.toLowerCase().includes('scatter')) ||
-                           txt.toLowerCase().includes('scatter');
-        if (hasScatter) {
-          sym.style.display = 'none';
-        }
-      });
+      // Hide scatter row and inject bonus images — use MutationObserver to catch engine re-renders
+      function applyScatterFix() {
+        // Hide any element whose text contains 'Scatter' or whose img src contains 'scatter'
+        ptInner.querySelectorAll('div,li,section,article').forEach(function(el) {
+          if (el.id === 'bonusWheelImages' || el.id === 'howToWinBanner') return;
+          const img = el.querySelector('img');
+          const hasScatterImg = img && img.src && img.src.toLowerCase().includes('scatter');
+          const hasScatterText = el.textContent && el.textContent.includes('Scatter');
+          if (hasScatterImg || hasScatterText) {
+            el.style.setProperty('display', 'none', 'important');
+          }
+        });
 
-      // Also nuke any engine-rendered scatter entry via brute-force text scan
-      ptInner.querySelectorAll('*').forEach(function(el) {
-        if (el.children.length === 0 && el.textContent.trim() === 'Scatter') {
-          let row = el;
-          for (let i = 0; i < 6; i++) { if (row.parentElement && row.parentElement !== ptInner) row = row.parentElement; else break; }
-          row.style.display = 'none';
-        }
-      });
-
-      // Inject the two bonus images in the center of the paytable
-      if (!document.getElementById('bonusWheelImages')) {
-        const block = document.createElement('div');
-        block.id = 'bonusWheelImages';
-        block.style.cssText = 'width:100%;text-align:center;padding:20px 0;';
-        block.innerHTML =
-          '<img src="assets/bonus/wheel.png" style="width:320px;max-width:90%;border-radius:12px;display:block;margin:0 auto 16px;" alt="Bonus Wheel">' +
-          '<img src="assets/images/symbols/wheel-rules.png" style="width:320px;max-width:90%;border-radius:12px;display:block;margin:0 auto;" alt="Bonus Wheel Rules">';
-        // Insert after the howToWinBanner (first child), before the symbol rows
-        const banner = document.getElementById('howToWinBanner');
-        if (banner && banner.nextSibling) {
-          ptInner.insertBefore(block, banner.nextSibling);
-        } else {
-          ptInner.appendChild(block);
+        // Inject bonus wheel images if not already present
+        if (!document.getElementById('bonusWheelImages')) {
+          const block = document.createElement('div');
+          block.id = 'bonusWheelImages';
+          block.style.cssText = 'width:100%;text-align:center;padding:20px 0;';
+          block.innerHTML =
+            '<img src="assets/bonus/wheel.png" style="width:320px;max-width:90%;border-radius:12px;display:block;margin:0 auto 16px;" alt="Bonus Wheel">' +
+            '<img src="assets/images/symbols/wheel-rules.png" style="width:320px;max-width:90%;border-radius:12px;display:block;margin:0 auto;" alt="Bonus Wheel Rules">';
+          const banner = document.getElementById('howToWinBanner');
+          if (banner && banner.nextSibling) {
+            ptInner.insertBefore(block, banner.nextSibling);
+          } else {
+            ptInner.appendChild(block);
+          }
         }
       }
+
+      // Run once immediately, then watch for engine re-renders
+      applyScatterFix();
+      const scatterObserver = new MutationObserver(function() { applyScatterFix(); });
+      scatterObserver.observe(ptInner, { childList: true, subtree: true });
     }, 1500);
 
 
