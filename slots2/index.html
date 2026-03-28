@@ -15,18 +15,18 @@
     betChangeAmount: 100,
     symbols: [
       // Low tier  (idx 0=j, 1=q, 2=a)
-      { filename: 'j.png',        scatter: false, wild: false, w1:0, w2:0, w3:13, w4:27, w5:54 },
-      { filename: 'q.png',        scatter: false, wild: false, w1:0, w2:0, w3:13, w4:27, w5:54 },
-      { filename: 'a.png',        scatter: false, wild: false, w1:0, w2:0, w3:13, w4:27, w5:54 },
+      { filename: 'j.png',        scatter: false, wild: false, w1:0, w2:0, w3:12, w4:24, w5:49 },
+      { filename: 'q.png',        scatter: false, wild: false, w1:0, w2:0, w3:12, w4:24, w5:49 },
+      { filename: 'a.png',        scatter: false, wild: false, w1:0, w2:0, w3:12, w4:24, w5:49 },
       // Mid-low tier (idx 3=clubs, 4=spades)
-      { filename: 'clubs.png',    scatter: false, wild: false, w1:0, w2:0, w3:20, w4:38, w5:76 },
-      { filename: 'spades.png',   scatter: false, wild: false, w1:0, w2:0, w3:20, w4:38, w5:76 },
+      { filename: 'clubs.png',    scatter: false, wild: false, w1:0, w2:0, w3:18, w4:34, w5:68 },
+      { filename: 'spades.png',   scatter: false, wild: false, w1:0, w2:0, w3:18, w4:34, w5:68 },
       // Mid tier (idx 5=hearts, 6=diamonds, 7=k)
-      { filename: 'hearts.png',   scatter: false, wild: false, w1:0, w2:0, w3:27, w4:52, w5:103 },
-      { filename: 'diamonds.png', scatter: false, wild: false, w1:0, w2:0, w3:27, w4:52, w5:103 },
-      { filename: 'k.png',        scatter: false, wild: false, w1:0, w2:0, w3:27, w4:52, w5:103 },
+      { filename: 'hearts.png',   scatter: false, wild: false, w1:0, w2:0, w3:24, w4:47, w5:93 },
+      { filename: 'diamonds.png', scatter: false, wild: false, w1:0, w2:0, w3:24, w4:47, w5:93 },
+      { filename: 'k.png',        scatter: false, wild: false, w1:0, w2:0, w3:24, w4:47, w5:93 },
       // Jackpot (idx 8=seven)
-      { filename: 'seven.png',    scatter: false, wild: false, w1:0, w2:0, w3:54, w4:108, w5:216 },
+      { filename: 'seven.png',    scatter: false, wild: false, w1:0, w2:0, w3:49, w4:97, w5:194 },
       // Wild (idx 9)
       { filename: 'wild.png',     scatter: false, wild: true,  w1:0, w2:0, w3:0,  w4:0,   w5:0  },
       // Scatter (idx 10)
@@ -255,51 +255,7 @@
            filter:drop-shadow(0 2px 12px rgba(0,0,0,0.7));" />
   <div id="slot-machine"></div>
 
-  <!-- LOGO DEBUG PANEL (press L to toggle) -->
-  <div id="logoDebug" style="display:none;position:fixed;top:10px;right:10px;z-index:9999;
-    background:rgba(0,0,0,0.85);color:#fff;padding:14px 18px;border-radius:10px;
-    font-family:monospace;font-size:13px;min-width:260px;border:1px solid #555;">
-    <div style="font-size:15px;font-weight:bold;margin-bottom:10px;color:#ffd700;">🎰 Logo Debugger</div>
-    <div style="margin-bottom:6px;">
-      <label>Height: <span id="dbgHVal">360</span>px</label><br>
-      <input type="range" id="dbgHeight" min="50" max="800" value="360" style="width:100%" oninput="applyLogoDebug()">
-    </div>
-    <div style="margin-bottom:6px;">
-      <label>Top offset: <span id="dbgTVal">0</span>px</label><br>
-      <input type="range" id="dbgTop" min="-400" max="400" value="0" style="width:100%" oninput="applyLogoDebug()">
-    </div>
-    <div style="margin-bottom:6px;">
-      <label>Left offset: <span id="dbgLVal">0</span>px</label><br>
-      <input type="range" id="dbgLeft" min="-600" max="600" value="0" style="width:100%" oninput="applyLogoDebug()">
-    </div>
-    <div style="margin-top:10px;padding:8px;background:#111;border-radius:6px;font-size:11px;color:#adf;word-break:break-all;" id="dbgOutput">
-      CSS will show here
-    </div>
-    <div style="margin-top:8px;font-size:11px;color:#888;">Press <b>L</b> to hide</div>
-  </div>
-  <script>
-  function applyLogoDebug() {
-    const h   = document.getElementById('dbgHeight').value;
-    const top = document.getElementById('dbgTop').value;
-    const lft = document.getElementById('dbgLeft').value;
-    document.getElementById('dbgHVal').textContent = h;
-    document.getElementById('dbgTVal').textContent = top;
-    document.getElementById('dbgLVal').textContent = lft;
-    const logo = document.getElementById('hohLogo');
-    logo.style.height = h + 'px';
-    logo.style.top = top + 'px';
-    logo.style.left = '50%';
-    logo.style.transform = 'translateX(calc(-50% + ' + lft + 'px))';
-    document.getElementById('dbgOutput').textContent =
-      'height:' + h + 'px; top:' + top + 'px; left-offset:' + lft + 'px';
-  }
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'l' || e.key === 'L') {
-      const panel = document.getElementById('logoDebug');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-  });
-  </script>
+
 
   <!-- SCATTER SOUND: hybrid approach.
        Phase 1 (burst intercept): when the engine fires the 5 stopSpin setTimeouts, read each
@@ -550,131 +506,68 @@
     // Slow reels by 20% (engine default speed_max is 5000)
     slotMachineConfig.speed_max = 4000;
 
-    // Paytable debugger (press P to toggle)
-    (function() {
-      var panel = null;
-      function buildPanel() {
-        if (panel) { panel.remove(); panel = null; return; }
-        panel = document.createElement('div');
-        panel.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.9);' +
-          'color:#fff;padding:14px 18px;border-radius:10px;font-family:monospace;font-size:12px;' +
-          'min-width:270px;border:1px solid #888;';
-        panel.innerHTML = '<div style="font-size:14px;font-weight:bold;color:#ffd700;margin-bottom:10px;">?? Paytable Debugger</div>' +
-          mkSlider('imgSize',  'Image size (px)', 80, 400, 200) +
-          mkSlider('noteSize', 'Rules font (rem)', 0.5, 2.5, 1.1, 0.05) +
-          mkSlider('notePad',  'Rules padding (px)', 4, 60, 12) +
-          mkSlider('symPad',   'Symbol padding (px)', 0, 80, 20) +
-          '<div id="ptDbgOut" style="margin-top:10px;padding:8px;background:#111;border-radius:6px;font-size:10px;color:#adf;word-break:break-all;">Values will show here</div>' +
-          '<div style="margin-top:6px;font-size:10px;color:#888;">Press <b>P</b> to hide</div>';
-        document.body.appendChild(panel);
-        panel.querySelectorAll('input[type=range]').forEach(function(s) {
-          s.addEventListener('input', applyDbg);
-        });
-        applyDbg();
-      }
-      function mkSlider(id, label, min, max, val, step) {
-        step = step || 1;
-        return '<div style="margin-bottom:8px;"><label>' + label + ': <span id="' + id + 'Val">' + val + '</span></label><br>' +
-          '<input type="range" id="' + id + 'Sld" min="' + min + '" max="' + max + '" value="' + val + '" step="' + step + '" style="width:100%"></div>';
-      }
-      function getVal(id) { var el = document.getElementById(id+'Sld'); return el ? parseFloat(el.value) : null; }
-      function setLbl(id, v) { var el = document.getElementById(id+'Val'); if(el) el.textContent = v; }
-      function applyDbg() {
-        var imgSize  = getVal('imgSize');
-        var noteSize = getVal('noteSize');
-        var notePad  = getVal('notePad');
-        var symPad   = getVal('symPad');
-        setLbl('imgSize',  imgSize);
-        setLbl('noteSize', noteSize);
-        setLbl('notePad',  notePad);
-        setLbl('symPad',   symPad);
-        var sym = document.querySelector('.smg-paytable-symbol:has(.scatter-spin-rules)');
-        if (!sym) { sym = document.querySelector('.scatter-spin-rules'); if(sym) sym = sym.parentElement; }
-        if (sym) {
-          sym.style.padding = symPad + 'px 0';
-          var img = sym.querySelector('img');
-          if (img) { img.style.width = imgSize + 'px'; img.style.height = imgSize + 'px'; }
-          var note = sym.querySelector('.scatter-spin-rules');
-          if (note) { note.style.fontSize = noteSize + 'rem'; note.style.padding = notePad + 'px ' + (notePad*1.5) + 'px'; }
-        }
-        var out = document.getElementById('ptDbgOut');
-        if (out) out.textContent = 'imgSize:' + imgSize + 'px | noteFont:' + noteSize + 'rem | notePad:' + notePad + 'px | symPad:' + symPad + 'px';
-      }
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'p' || e.key === 'P') buildPanel();
-      });
-    })();
+    // Paytable debugger removed (production build)
 
     // Inject scatter/wheel spin rules into paytable after engine renders it
     setTimeout(function injectScatterNote() {
       const ptInner = document.querySelector('.smg-paytable-inner');
       if (!ptInner) { setTimeout(injectScatterNote, 500); return; }
-      const symbols = ptInner.querySelectorAll('.smg-paytable-symbol');
-      // Debug button - always visible in bottom-right
-      if (!document.getElementById('ptDbgBtn')) {
-        const dbgBtn = document.createElement('button');
-        dbgBtn.id = 'ptDbgBtn';
-        dbgBtn.textContent = '? Debug Layout';
-        dbgBtn.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:99999;padding:8px 16px;' +
-          'background:#111;color:#ffd700;border:1px solid #ffd700;border-radius:6px;cursor:pointer;font-size:13px;';
-        let dbgPanel = null;
-        dbgBtn.onclick = function() {
-          if (dbgPanel) { dbgPanel.remove(); dbgPanel = null; return; }
-          dbgPanel = document.createElement('div');
-          dbgPanel.style.cssText = 'position:fixed;bottom:50px;right:12px;z-index:99999;background:rgba(0,0,0,0.92);' +
-            'color:#fff;padding:14px 18px;border-radius:10px;font-family:monospace;font-size:12px;' +
-            'min-width:270px;border:1px solid #888;';
-          function mkS(id,lbl,min,max,val,step) {
-            return '<div style="margin-bottom:8px"><label>' + lbl + ': <span id="' + id + 'V">' + val + '</span></label><br>' +
-              '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + (step||1) + '" value="' + val + '" style="width:100%"></div>';
-          }
-          dbgPanel.innerHTML = '<div style="font-size:13px;font-weight:bold;color:#ffd700;margin-bottom:10px;">?? Paytable Layout</div>' +
-            mkS('dImg','Image size (px)',60,400,200) +
-            mkS('dFnt','Rules font (rem)',0.5,2.5,1.1,0.05) +
-            mkS('dPad','Rules padding (px)',4,60,12) +
-            mkS('dSym','Symbol padding (px)',0,100,20) +
-            '<div id="dOut" style="margin-top:8px;padding:6px;background:#111;border-radius:4px;font-size:10px;color:#adf;"></div>';
-          document.body.appendChild(dbgPanel);
-          function applyD() {
-            var iSz = parseFloat(document.getElementById('dImg').value);
-            var fSz = parseFloat(document.getElementById('dFnt').value);
-            var pSz = parseFloat(document.getElementById('dPad').value);
-            var sSz = parseFloat(document.getElementById('dSym').value);
-            document.getElementById('dImgV').textContent = iSz;
-            document.getElementById('dFntV').textContent = fSz;
-            document.getElementById('dPadV').textContent = pSz;
-            document.getElementById('dSymV').textContent = sSz;
-            var note = document.querySelector('.scatter-spin-rules');
-            var sym  = note ? note.parentElement : null;
-            if (sym) {
-              sym.style.padding = sSz + 'px 0';
-              var img = sym.querySelector('img');
-              if (img) { img.style.width = iSz + 'px'; img.style.height = iSz + 'px'; }
-              if (note) { note.style.fontSize = fSz + 'rem'; note.style.padding = pSz + 'px ' + Math.round(pSz*1.5) + 'px'; }
-            }
-            document.getElementById('dOut').textContent = 'img:' + iSz + 'px font:' + fSz + 'rem pad:' + pSz + 'px symPad:' + sSz + 'px';
-          }
-          dbgPanel.querySelectorAll('input').forEach(function(s){ s.addEventListener('input', applyD); });
-          applyD();
-        };
-        document.body.appendChild(dbgBtn);
+
+      // Hide the engine's top banner (redundant, wastes space)
+      if (!document.getElementById('ptEngineHideStyle')) {
+        const hs = document.createElement('style');
+        hs.id = 'ptEngineHideStyle';
+        hs.textContent = '.smg-paytable-inner > div:first-child img, .smg-paytable-inner > div:first-child canvas { display:none!important; } .smg-paytable-inner > div:first-child { display:none!important; }';
+        document.head.appendChild(hs);
       }
+      // Hide first child of ptInner directly too
+      if (ptInner.firstElementChild && !ptInner.firstElementChild.id) {
+        ptInner.firstElementChild.style.display = 'none';
+      }
+
+      // Inject compact How to Win banner
+      if (!document.getElementById('howToWinBanner')) {
+        const banner = document.createElement('div');
+        banner.id = 'howToWinBanner';
+        banner.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 16px;margin-bottom:10px;' +
+          'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.3);border-radius:8px;' +
+          'font-family:Georgia,serif;text-align:center;';
+        banner.innerHTML =
+          '<div style="font-size:0.95rem;font-weight:bold;color:#ffd700;letter-spacing:2px;margin-bottom:4px;">HOW TO WIN</div>' +
+          '<div style="font-size:0.8rem;color:#ccc;line-height:1.6;">' +
+            'Wins pay <strong style="color:#ffd700;">left to right from Reel 1</strong> &nbsp;·&nbsp; Match 3, 4, or 5 in a row &nbsp;·&nbsp; ' +
+            '✅ 1-2-3 &nbsp; ✅ 1-2-3-4 &nbsp; ✅ 1-2-3-4-5 &nbsp;·&nbsp; ❌ 3-4-5 does not pay<br>' +
+            '<strong style="color:#ffd700;">🃏 Wild</strong> extends a chain but cannot fix a broken one.' +
+          '</div>';
+        ptInner.insertBefore(banner, ptInner.firstChild);
+      }
+
+      // Fix broken paytable images — ensure all symbol imgs resolve correctly
+      ptInner.querySelectorAll('img').forEach(function(img) {
+        if (!img.complete || img.naturalWidth === 0) {
+          var src = img.src || img.getAttribute('src') || '';
+          var fname = src.split('/').pop().split('?')[0];
+          if (fname) img.src = 'assets/images/symbols/' + fname;
+        }
+        img.onerror = function() {
+          var fname = (this.src || '').split('/').pop().split('?')[0];
+          if (fname && !this.src.includes('assets/images/symbols/')) {
+            this.src = 'assets/images/symbols/' + fname;
+          }
+        };
+      });
       symbols.forEach(function(sym) {
         const img = sym.querySelector('img');
         if (img && img.src && img.src.includes('scatter')) {
           if (sym.querySelector('.scatter-spin-rules')) return;
 
-          // Center the whole entry and make it span full width
           sym.style.cssText = 'display:flex;flex-direction:column;align-items:center;' +
-            'justify-content:center;width:100%;margin:0 auto;padding:20px 0;';
+            'justify-content:center;width:100%;margin:0 auto;padding:22px 0;margin-top:-459px;';
 
-          // Enlarge image
-          img.style.cssText = 'width:200px;height:200px;display:block;margin:0 auto 14px;';
+          img.style.cssText = 'width:338px;height:338px;display:block;margin:0 auto 14px;';
 
-          // Replace "Scatter" label with "Bonus Wheel"
           const title = sym.querySelector('.smg-paytable-title, [class*="title"], [class*="name"]');
           if (title) { title.textContent = 'Bonus Wheel'; title.style.cssText = 'font-size:1.2rem;font-weight:bold;text-align:center;color:#ffd700;margin-bottom:8px;'; }
-          // Also try span/div that just says "Scatter"
           sym.querySelectorAll('span,div').forEach(function(el) {
             if (el.children.length === 0 && el.textContent.trim() === 'Scatter') {
               el.textContent = 'Bonus Wheel';
@@ -682,22 +575,16 @@
             }
           });
 
-          // Hide the engine payout lines (x3 Total bet x 13 etc)
           sym.querySelectorAll('.smg-lines,[class*="lines"],[class*="line-count"]').forEach(function(l) {
             l.style.display = 'none';
           });
 
-          // Inject our own rules
           const note = document.createElement('div');
           note.className = 'scatter-spin-rules';
-          note.style.cssText = 'margin-top:10px;padding:12px 20px;background:rgba(255,215,0,0.1);' +
-            'border:1px solid rgba(255,215,0,0.5);border-radius:8px;font-size:1.1rem;' +
-            'color:#ffd700;line-height:2;text-align:center;';
-          note.innerHTML =
-            'x3 Wheels = 1 Spin<br>' +
-            'x4 Wheels = 3 Spins<br>' +
-            'x5 Wheels = 5 Spins<br>' +
-            '<span style="color:#ff9999;font-size:0.85rem;">Must play all 20 lines</span>';
+          note.style.cssText = 'margin-top:10px;text-align:center;';
+          note.innerHTML = '<img src="assets/images/symbols/wheel-rules.png" ' +
+            'style="max-width:100%;width:320px;border-radius:10px;display:block;margin:0 auto;" ' +
+            'alt="Bonus Wheel Rules">';
           sym.appendChild(note);
         }
       });
