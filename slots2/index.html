@@ -556,24 +556,16 @@
           }
         };
       });
-      // Hide scatter row entirely — we replace it with custom images below
-      symbols.forEach(function(sym) {
-        const txt = sym.textContent || '';
-        const img = sym.querySelector('img');
-        const hasScatter = (img && img.src && img.src.toLowerCase().includes('scatter')) ||
-                           txt.toLowerCase().includes('scatter');
-        if (hasScatter) {
-          sym.style.display = 'none';
-        }
-      });
-
-      // Also nuke any engine-rendered scatter entry via brute-force text scan
-      ptInner.querySelectorAll('*').forEach(function(el) {
-        if (el.children.length === 0 && el.textContent.trim() === 'Scatter') {
-          let row = el;
-          for (let i = 0; i < 6; i++) { if (row.parentElement && row.parentElement !== ptInner) row = row.parentElement; else break; }
-          row.style.display = 'none';
-        }
+      // Hide scatter row — walk direct children of ptInner, hide any that contain scatter img or text
+      Array.from(ptInner.children).forEach(function(child) {
+        if (child.id === 'bonusWheelImages' || child.id === 'howToWinBanner') return;
+        const imgs = child.querySelectorAll('img');
+        let hasScatter = false;
+        imgs.forEach(function(img) {
+          if (img.src && img.src.toLowerCase().includes('scatter')) hasScatter = true;
+        });
+        if (!hasScatter && child.textContent && child.textContent.includes('Scatter')) hasScatter = true;
+        if (hasScatter) child.style.setProperty('display', 'none', 'important');
       });
 
       // Inject the two bonus images in the center of the paytable
