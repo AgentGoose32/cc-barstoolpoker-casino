@@ -589,12 +589,11 @@
         }
       });
 
-      // Hide the scatter row - find scatter img, walk up to direct child of ptInner
-      ptInner.querySelectorAll('img').forEach(function(img) {
-        if (img.src && img.src.toLowerCase().includes('scatter')) {
-          var node = img;
-          while (node.parentElement && node.parentElement !== ptInner) node = node.parentElement;
-          if (node.parentElement === ptInner) node.style.setProperty('display','none','important');
+      // Hide the scatter row - walk all direct children of ptInner, hide any whose text includes "Scatter"
+      Array.from(ptInner.children).forEach(function(child) {
+        if (child.id) return; // skip our injected elements
+        if (child.innerText && child.innerText.includes('Scatter')) {
+          child.style.setProperty('display','none','important');
         }
       });
 
