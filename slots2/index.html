@@ -556,16 +556,19 @@
           }
         };
       });
-      // Hide scatter row — walk direct children of ptInner, hide any that contain scatter img or text
-      Array.from(ptInner.children).forEach(function(child) {
-        if (child.id === 'bonusWheelImages' || child.id === 'howToWinBanner') return;
-        const imgs = child.querySelectorAll('img');
-        let hasScatter = false;
-        imgs.forEach(function(img) {
-          if (img.src && img.src.toLowerCase().includes('scatter')) hasScatter = true;
-        });
-        if (!hasScatter && child.textContent && child.textContent.includes('Scatter')) hasScatter = true;
-        if (hasScatter) child.style.setProperty('display', 'none', 'important');
+      // Hide just the scatter symbol row — find scatter img, walk up to its ptInner direct-child row
+      ptInner.querySelectorAll('img').forEach(function(img) {
+        if (img.src && img.src.toLowerCase().includes('scatter')) {
+          var el = img.parentElement;
+          for (var i = 0; i < 6; i++) {
+            if (!el || el === ptInner) break;
+            if (el.parentElement === ptInner) {
+              el.style.setProperty('display', 'none', 'important');
+              break;
+            }
+            el = el.parentElement;
+          }
+        }
       });
 
       // Inject the two bonus images in the center of the paytable
