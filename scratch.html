@@ -258,26 +258,20 @@
   const TICKET_COST = 500;
   const SCRATCH_THRESHOLD = 0.45;
 
-  // Cell positions as % of image (x, y, w, h in 0-1 range relative to displayed image)
-  // These are DEFAULTS - use debug mode to dial in the real positions
-  // Laid out in a 4x3 grid roughly centered on the ticket background
+  // Cell positions locked by Mike 2026-03-31
   const DEFAULT_CELLS = [
-    // Row 1
-    { x: 0.08, y: 0.30, w: 0.25, h: 0.12 },
-    { x: 0.38, y: 0.30, w: 0.25, h: 0.12 },
-    { x: 0.68, y: 0.30, w: 0.25, h: 0.12 },
-    // Row 2
-    { x: 0.08, y: 0.45, w: 0.25, h: 0.12 },
-    { x: 0.38, y: 0.45, w: 0.25, h: 0.12 },
-    { x: 0.68, y: 0.45, w: 0.25, h: 0.12 },
-    // Row 3
-    { x: 0.08, y: 0.60, w: 0.25, h: 0.12 },
-    { x: 0.38, y: 0.60, w: 0.25, h: 0.12 },
-    { x: 0.68, y: 0.60, w: 0.25, h: 0.12 },
-    // Row 4
-    { x: 0.08, y: 0.75, w: 0.25, h: 0.12 },
-    { x: 0.38, y: 0.75, w: 0.25, h: 0.12 },
-    { x: 0.68, y: 0.75, w: 0.25, h: 0.12 },
+    { x: 0.3558, y: 0.5168, w: 0.1368, h: 0.1282 }, // 1
+    { x: 0.5056, y: 0.5209, w: 0.1430, h: 0.1241 }, // 2
+    { x: 0.1963, y: 0.5195, w: 0.1389, h: 0.1269 }, // 3
+    { x: 0.1955, y: 0.7821, w: 0.1450, h: 0.1365 }, // 4
+    { x: 0.6640, y: 0.5241, w: 0.1430, h: 0.1255 }, // 5
+    { x: 0.1984, y: 0.6503, w: 0.1430, h: 0.1337 }, // 6
+    { x: 0.3640, y: 0.7852, w: 0.1327, h: 0.1351 }, // 7
+    { x: 0.5117, y: 0.6549, w: 0.1286, h: 0.1310 }, // 8
+    { x: 0.3527, y: 0.6494, w: 0.1389, h: 0.1296 }, // 9
+    { x: 0.5166, y: 0.7908, w: 0.1306, h: 0.1310 }, // 10
+    { x: 0.6723, y: 0.7857, w: 0.1347, h: 0.1378 }, // 11
+    { x: 0.6656, y: 0.6512, w: 0.1347, h: 0.1296 }, // 12
   ];
 
   // Saved positions (populated from debug or defaults)
