@@ -65,6 +65,7 @@
       overflow: hidden;
       cursor: url('scratch-cursor-64.png') 32 32, crosshair;
       pointer-events: all;
+      container-type: inline-size;
     }
 
     .scratch-cell canvas {
@@ -82,11 +83,19 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
       pointer-events: none;
       z-index: 0;
       background: #0d0600;
+      overflow: hidden;
+    }
+
+    .prize-pct-text {
+      font-family: Georgia, serif;
+      font-weight: bold;
+      line-height: 1;
+      /* fluid size: scales with the cell width, capped so it never overflows */
+      font-size: clamp(10px, 9cqw, 48px);
+      white-space: nowrap;
     }
 
     /* DEBUG MODE */
@@ -544,10 +553,8 @@
       prizeDiv.className = 'cell-prize-display';
       prizeDiv.id = `cprize-${i}`;
       prizeDiv.style.color = prize.color;
-      const payout = Math.floor(buyin * prize.pct / 100);
       prizeDiv.innerHTML = `
-        <span style="font-size:220%;font-weight:bold;line-height:1;color:${prize.color};text-shadow:0 0 10px ${prize.color}88;">${prize.label}</span>
-        <span style="font-size:85%;color:#aaa;margin-top:4px;">${payout.toLocaleString()}g</span>
+        <span class="prize-pct-text" style="color:${prize.color};text-shadow:0 0 10px ${prize.color}88;">${prize.label}</span>
       `;
       cell.appendChild(prizeDiv);
 
