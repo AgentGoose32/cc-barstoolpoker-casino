@@ -277,18 +277,22 @@
   // Saved positions (populated from debug or defaults)
   let cellDefs = DEFAULT_CELLS.map(c => ({ ...c }));
 
+  // Prizes as % of buy-in. img = path relative to scratch.html
   const PRIZES = [
-    { value: 100,   label: '100g',    weight: 30, color: '#aaaaaa' },
-    { value: 250,   label: '250g',    weight: 25, color: '#cccccc' },
-    { value: 500,   label: '500g',    weight: 18, color: '#ffd700' },
-    { value: 1000,  label: '1,000g',  weight: 12, color: '#ffd700' },
-    { value: 2500,  label: '2,500g',  weight:  8, color: '#00ccff' },
-    { value: 5000,  label: '5,000g',  weight:  4, color: '#00ccff' },
-    { value: 10000, label: '10,000g', weight:  2, color: '#ff8800' },
-    { value: 50000, label: 'JACKPOT', weight:  1, color: '#ff0066' },
+    { pct:    5, label:   '5%', img: '../slots2/assets/images/symbols/j.png',        color: '#aaaaaa', weight: 38 },
+    { pct:   10, label:  '10%', img: '../slots2/assets/images/symbols/q.png',        color: '#cccccc', weight: 26 },
+    { pct:   25, label:  '25%', img: '../slots2/assets/images/symbols/k.png',        color: '#ffd700', weight: 16 },
+    { pct:   50, label:  '50%', img: '../slots2/assets/images/symbols/clubs.png',    color: '#ffd700', weight:  9 },
+    { pct:   75, label:  '75%', img: '../slots2/assets/images/symbols/diamonds.png', color: '#00ccff', weight:  5 },
+    { pct:  100, label: '100%', img: '../slots2/assets/images/symbols/hearts.png',   color: '#00ccff', weight:  3 },
+    { pct:  150, label: '150%', img: '../slots2/assets/images/symbols/spades.png',   color: '#ff8800', weight:  2 },
+    { pct:  200, label: '200%', img: '../slots2/assets/images/symbols/seven.png',    color: '#ff8800', weight:  1 },
+    { pct:  500, label: '500%', img: '../slots2/assets/images/symbols/scatter.png',  color: '#ff4400', weight: 0.4 },
+    { pct: 2000, label: 'JACKPOT', img: '../slots2/assets/images/symbols/wild.png',  color: '#ff0066', weight: 0.1 },
   ];
 
   let balance = 100000;
+  let buyin = 500; // updated per ticket purchase
   let ticketActive = false;
   let ticketValues = [];
   let cellRevealed = [];
@@ -452,47 +456,65 @@
   }
 
   function generateTicket() {
-    const hasWin = Math.random() < 0.30;
+    // Every ticket guaranteed exactly one winning triple
+    // Pick a winning prize (weighted - skews toward lower %)
+    const winPrize = weightedRandom();
+
+    // Place 3 of the winner at random positions
+    const positions = [];
+    while (positions.length < 3) {
+      const p = Math.floor(Math.random() * CELLS);
+      if (!positions.includes(p)) positions.push(p);
+    }
+
     const values = [];
-    if (hasWin) {
-      const winPrize = weightedRandom();
-      const positions = [];
-      while (positions.length < 3) {
-        const p = Math.floor(Math.random() * CELLS);
-        if (!positions.includes(p)) positions.push(p);
+    for (let i = 0; i < CELLS; i++) {
+      if (positions.includes(i)) {
+        values.push(winPrize);
+      } else {
+        // Fill rest - avoid accidentally creating a second triple
+        let pick, attempts = 0;
+        do {
+          pick = weightedRandom();
+          attempts++;
+          // Count how many of this pct we already have in non-winning spots
+          const existing = values.filter(v => v.pct === pick.pct).length;
+          if (existing < 2 || attempts > 15) break;
+        } while (true);
+        values.push(pick);
       }
-      for (let i = 0; i < CELLS; i++) {
-        if (positions.includes(i)) {
-          values.push(winPrize);
-        } else {
-          let pick, attempts = 0;
-          do { pick = weightedRandom(); attempts++; }
-          while (attempts < 10 && pick.value === winPrize.value);
-          values.push(pick);
-        }
-      }
-    } else {
-      for (let i = 0; i < CELLS; i++) values.push(weightedRandom());
-      const counts = {};
-      for (const v of values) counts[v.value] = (counts[v.value] || 0) + 1;
-      for (const [val, cnt] of Object.entries(counts)) {
-        if (cnt >= 3) {
-          for (let i = 0; i < values.length; i++) {
-            if (values[i].value == val) {
-              let rep; do { rep = weightedRandom(); } while (rep.value == val);
-              values[i] = rep; break;
-            }
+    }
+
+    // Verify no accidental second triple sneaked in, fix if so
+    const counts = {};
+    for (const v of values) counts[v.pct] = (counts[v.pct] || 0) + 1;
+    for (const [pct, cnt] of Object.entries(counts)) {
+      if (cnt >= 3 && parseInt(pct) !== winPrize.pct) {
+        // Replace one non-winner occurrence
+        for (let i = 0; i < values.length; i++) {
+          if (values[i].pct == pct && !positions.includes(i)) {
+            let rep, att = 0;
+            do { rep = weightedRandom(); att++; } while (rep.pct == pct && att < 15);
+            values[i] = rep;
+            break;
           }
         }
       }
     }
+
     return values;
   }
 
+  // Returns array of winning prizes (pct values that appear 3+ times)
   function findWins(values) {
     const counts = {};
-    for (const v of values) counts[v.value] = (counts[v.value] || 0) + 1;
-    return Object.entries(counts).filter(([,c]) => c >= 3).map(([v]) => parseInt(v));
+    for (const v of values) counts[v.pct] = (counts[v.pct] || 0) + 1;
+    return Object.entries(counts).filter(([,c]) => c >= 3).map(([p]) => parseInt(p));
+  }
+
+  function calcPayout(winPcts) {
+    // Sum all winning pcts, apply to buy-in
+    return winPcts.reduce((s, pct) => s + Math.floor(buyin * pct / 100), 0);
   }
 
   // ── SCRATCH CELLS ─────────────────────────────────────────────────────
@@ -519,7 +541,12 @@
       prizeDiv.className = 'cell-prize-display';
       prizeDiv.id = `cprize-${i}`;
       prizeDiv.style.color = prize.color;
-      prizeDiv.innerHTML = `<span style="font-size:110%;font-weight:bold">${prize.label}</span>`;
+      const payout = Math.floor(buyin * prize.pct / 100);
+      prizeDiv.innerHTML = `
+        <img src="${prize.img}" style="width:55%;height:auto;max-height:60%;object-fit:contain;image-rendering:pixelated;" draggable="false"/>
+        <span style="font-size:85%;font-weight:bold;margin-top:2px;">${prize.label}</span>
+        <span style="font-size:72%;color:#aaa;">${payout.toLocaleString()}g</span>
+      `;
       cell.appendChild(prizeDiv);
 
       // Scratch canvas
@@ -542,18 +569,18 @@
     canvas.style.height = '100%';
 
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#3a2800';
-    ctx.fillRect(0, 0, w, h);
-    // Dot texture
-    ctx.fillStyle = 'rgba(201,168,76,0.18)';
-    for (let y = 0; y < h; y += 5) {
-      for (let x = (y % 10 === 0 ? 0 : 3); x < w; x += 5) ctx.fillRect(x, y, 2, 2);
-    }
-    ctx.fillStyle = 'rgba(201,168,76,0.55)';
-    ctx.font = `bold ${Math.max(8, Math.floor(h * 0.22))}px Georgia`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SCRATCH', w / 2, h / 2);
+
+    // Paint the corresponding slice of the background image onto the canvas
+    // so the scratch layer is pixel-perfect with the gold tile underneath
+    const bgImg = document.getElementById('bg-img');
+    // Source coords in the original image (natural size)
+    const scaleX = bgImg.naturalWidth  / r.width;
+    const scaleY = bgImg.naturalHeight / r.height;
+    const sx = def.x * r.width  * scaleX;
+    const sy = def.y * r.height * scaleY;
+    const sw = w * scaleX;
+    const sh = h * scaleY;
+    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, w, h);
 
     canvas.addEventListener('mousedown', (e) => { if (!ticketActive || cellRevealed[i]) return; isScratching = true; activeCellIdx = i; scratch(e, canvas, i); });
     canvas.addEventListener('mousemove', (e) => { if (!isScratching || activeCellIdx !== i || !ticketActive || cellRevealed[i]) return; scratch(e, canvas, i); });
@@ -601,37 +628,35 @@
     ticketActive = false;
     document.getElementById('revealAllBtn').disabled = true;
 
-    const wins = findWins(ticketValues);
-    const totalWin = wins.reduce((s, v) => s + v, 0);
+    const winPcts = findWins(ticketValues);
+    const totalWin = calcPayout(winPcts);
 
-    if (wins.length > 0) {
-      for (let i = 0; i < CELLS; i++) {
-        if (wins.includes(ticketValues[i].value)) {
-          const prizeDiv = document.getElementById(`cprize-${i}`);
-          if (prizeDiv) prizeDiv.classList.add('winner-glow');
-        }
+    // Always a winner - highlight matching cells
+    for (let i = 0; i < CELLS; i++) {
+      if (winPcts.includes(ticketValues[i].pct)) {
+        const prizeDiv = document.getElementById(`cprize-${i}`);
+        if (prizeDiv) prizeDiv.classList.add('winner-glow');
       }
-      balance += totalWin;
-      updateHUD();
-      document.getElementById('lastWinDisplay').textContent = fmt(totalWin);
-      document.getElementById('lastWinDisplay').className = 'hud-value green';
-      const banner = document.getElementById('resultBanner');
-      banner.className = 'result-banner win';
-      if (totalWin >= 50000)     { banner.textContent = `🎰 JACKPOT! +${fmt(totalWin)}!`; spawnParticles('💰', 20); }
-      else if (totalWin >= 5000) { banner.textContent = `🏆 BIG WIN! +${fmt(totalWin)}`;  spawnParticles('⭐', 12); }
-      else                       { banner.textContent = `✨ WINNER! +${fmt(totalWin)}`;    spawnParticles('✨', 8); }
-    } else {
-      const banner = document.getElementById('resultBanner');
-      banner.className = 'result-banner lose';
-      banner.textContent = 'Better luck next time...';
-      document.getElementById('lastWinDisplay').textContent = '---';
-      document.getElementById('lastWinDisplay').className = 'hud-value red';
     }
+
+    balance += totalWin;
+    updateHUD();
+    document.getElementById('lastWinDisplay').textContent = fmt(totalWin);
+    document.getElementById('lastWinDisplay').className = 'hud-value green';
+
+    const banner = document.getElementById('resultBanner');
+    banner.className = 'result-banner win';
+    const winPrize = ticketValues.find(v => winPcts.includes(v.pct));
+    if (winPrize && winPrize.pct >= 2000)    { banner.textContent = `🎰 JACKPOT! +${fmt(totalWin)}!`;   spawnParticles('💰', 20); }
+    else if (winPrize && winPrize.pct >= 200){ banner.textContent = `🏆 BIG WIN! +${fmt(totalWin)}`;    spawnParticles('⭐', 12); }
+    else if (winPrize && winPrize.pct >= 100){ banner.textContent = `✨ WINNER! +${fmt(totalWin)}`;      spawnParticles('✨', 8); }
+    else                                      { banner.textContent = `You win ${fmt(totalWin)}! Match: ${winPrize ? winPrize.label : ''}`;  }
     document.getElementById('buyBtn').disabled = balance < TICKET_COST;
   }
 
   function buyTicket() {
     if (balance < TICKET_COST) return;
+    buyin = TICKET_COST;
     balance -= TICKET_COST;
     updateHUD();
     ticketValues = generateTicket();
