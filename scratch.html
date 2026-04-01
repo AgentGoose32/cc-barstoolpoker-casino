@@ -27,7 +27,7 @@
       border: 1px solid #c9a84c44;
       border-radius: 8px;
       padding: 8px 20px;
-      margin-bottom: 12px;
+      margin-bottom: 0;
       font-size: 13px;
     }
     .hud-item { display: flex; flex-direction: column; align-items: center; gap: 1px; }
@@ -41,6 +41,7 @@
       position: relative;
       display: inline-block;
       line-height: 0;
+      margin-top: 60px;
     }
 
     #bg-img {
@@ -173,6 +174,15 @@
     .dbtn-done { background: #ff6600; color: #000; }
 
     /* Bottom bar */
+    #top-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
     #bottom-bar {
       margin-top: 12px;
       display: flex;
@@ -181,6 +191,54 @@
       flex-wrap: wrap;
       justify-content: center;
     }
+    #bottom-bar.pos-debug, #chip-bar.pos-debug {
+      position: fixed;
+      cursor: grab;
+      z-index: 8500;
+      outline: 2px dashed #00ffff;
+      outline-offset: 4px;
+    }
+    #bottom-bar.pos-debug:active, #chip-bar.pos-debug:active { cursor: grabbing; }
+
+    /* Chip selector */
+    #chip-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .chip-btn {
+      background: none;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      width: 47px; height: 47px;
+    }
+    .chip-btn img { width: 100%; height: 100%; border-radius: 50%; display: block; }
+    .chip-btn:hover { transform: scale(1.1); }
+    .chip-btn.selected { border-color: #ffd700; transform: scale(1.15); box-shadow: 0 0 16px #ffd70088; }
+    .chip-btn.debug-drag { position:fixed; cursor:grab; z-index:8500; border-color:#00ffff !important; box-shadow: 0 0 12px #00ffff88 !important; }
+    .chip-btn.debug-drag:active { cursor:grabbing; }
+    #bet-display {
+      font-size: 13px; color: #ffd700; text-align: center; margin-top: 6px; letter-spacing: 1px;
+    }
+
+    /* Chip debugger HUD */
+    #chip-debug-hud {
+      display:none; position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,0.9); border:1px solid #00ffff88; border-radius:8px;
+      padding:10px 18px; color:#00ffff; font-size:13px; z-index:8600;
+      font-family:monospace; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;
+      max-width:600px;
+    }
+    #chip-debug-hud.open { display:flex; }
+    .chip-dbtn {
+      background:#00ffff; color:#000; border:none; border-radius:5px;
+      padding:3px 10px; font-size:12px; font-weight:bold; cursor:pointer; margin-left:4px;
+    }
+    .chip-dbtn.done { background:#ff4444; color:#fff; }
 
     .btn {
       padding: 10px 22px;
@@ -198,14 +256,66 @@
     .btn-buy:disabled { background:#444; color:#888; cursor:not-allowed; transform:none; }
     .btn-reveal { background:rgba(255,255,255,0.08); color:#ffd700; border:1px solid #c9a84c44; }
     .btn-reveal:disabled { opacity:0.3; cursor:not-allowed; }
-    .btn-debug  { background:rgba(0,255,0,0.15); color:#00ff00; border:1px solid #00ff0066; }
+    .btn-paytable { background:rgba(180,140,40,0.2); color:#ffd700; border:1px solid #c9a84c88; }
+    .btn-paytable:hover { background:rgba(180,140,40,0.35); }
+
+    /* Pay Table Modal */
+    #paytable-modal {
+      display:none; position:fixed; inset:0; z-index:9999;
+      background:rgba(0,0,0,0.82); backdrop-filter:blur(4px);
+      align-items:center; justify-content:center;
+    }
+    #paytable-modal.open { display:flex; }
+    #paytable-inner {
+      background: linear-gradient(160deg,#1a0f00,#2a1800);
+      border:2px solid #c9a84c88; border-radius:14px;
+      padding:28px 32px; min-width:320px; max-width:420px; width:90%;
+      box-shadow:0 0 40px #c9a84c44;
+      font-family: inherit;
+    }
+    #paytable-inner h2 {
+      text-align:center; color:#ffd700; margin:0 0 18px 0;
+      font-size:20px; letter-spacing:3px; text-transform:uppercase;
+    }
+    .pt-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:7px 10px; border-radius:6px; margin-bottom:4px;
+      font-size:15px;
+    }
+    .pt-row:nth-child(odd) { background:rgba(255,255,255,0.04); }
+    .pt-prize { font-weight:bold; }
+    .pt-odds  { color:#aaa; font-size:13px; }
+    .pt-close {
+      display:block; margin:20px auto 0;
+      background:linear-gradient(135deg,#c9a84c,#ffd700);
+      color:#1a0a00; border:none; border-radius:8px;
+      padding:9px 32px; font-size:15px; font-weight:bold;
+      cursor:pointer; letter-spacing:1px;
+    }
+    .pt-close:hover { transform:scale(1.04); }
 
     .result-banner {
       text-align:center; padding:8px 20px; border-radius:8px;
       font-size:16px; font-weight:bold; letter-spacing:2px;
       min-width: 220px;
     }
-    .result-banner.idle { border:1px solid #c9a84c22; color:#c9a84c66; font-size:11px; }
+    .result-banner.draggable-mode {
+      position:fixed; cursor:grab; z-index:8000;
+      border:2px dashed #ffd700 !important; user-select:none;
+    }
+    .result-banner.draggable-mode:active { cursor:grabbing; }
+    #banner-debug-hud {
+      display:none; position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,0.85); border:1px solid #ffd70088; border-radius:8px;
+      padding:8px 16px; color:#ffd700; font-size:13px; z-index:8001;
+      font-family:monospace; display:none; align-items:center; gap:12px;
+    }
+    #banner-debug-hud.open { display:flex; }
+    #banner-copy-btn {
+      background:#ffd700; color:#1a0a00; border:none; border-radius:5px;
+      padding:3px 10px; font-size:12px; font-weight:bold; cursor:pointer;
+    }
+    .result-banner.idle { border:1px solid #c9a84c22; color:#ffffff; font-size:11px; }
     .result-banner.win  { background:rgba(0,255,100,0.15); border:1px solid #00ff88; color:#00ff88; }
     .result-banner.lose { background:rgba(255,50,50,0.1);  border:1px solid #ff444488; color:#ff6666; }
 
@@ -214,6 +324,26 @@
       100% { transform:translateY(-80px) scale(1.4); opacity:0; }
     }
     .particle { position:fixed; pointer-events:none; font-size:20px; animation:floatUp 1.2s ease-out forwards; z-index:999; }
+
+    /* Fireworks */
+    @keyframes fwExplode {
+      0%   { transform:translate(0,0) scale(0.2); opacity:1; }
+      80%  { opacity:1; }
+      100% { transform:translate(var(--fx), var(--fy)) scale(1); opacity:0; }
+    }
+    @keyframes fwTrail {
+      0%   { transform:translateY(0); opacity:1; }
+      100% { transform:translateY(var(--trail-dist)); opacity:0; }
+    }
+    .fw-dot {
+      position:fixed; pointer-events:none; border-radius:50%;
+      width:6px; height:6px;
+      animation: fwExplode 0.9s ease-out forwards;
+      z-index:9998;
+    }
+    #fireworks-canvas {
+      position:fixed; inset:0; pointer-events:none; z-index:9997;
+    }
 
     @keyframes pulse {
       0%,100% { box-shadow: inset 0 0 10px #ffd70066; }
@@ -224,19 +354,29 @@
 </head>
 <body>
 
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">BALANCE</div>
-    <div class="hud-value" id="balanceDisplay">100,000g</div>
+<div id="elem-debug-hud" style="display:none;position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);border:1px solid #00ffff88;border-radius:8px;padding:10px 18px;color:#00ffff;font-size:13px;z-index:8600;font-family:monospace;display:none;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:700px;">
+  <span id="elem-debug-coords">Drag buttons or chips to reposition</span>
+  <button class="chip-dbtn" onclick="copyElemCoords()">COPY ALL</button>
+  <button class="chip-dbtn done" onclick="toggleDragDebug()">DONE</button>
+</div>
+
+<div id="top-bar" style="position:fixed; left:756px; top:16px; margin:0;">
+  <button class="btn btn-paytable" onclick="openPayTable()">📋 Pay Table</button>
+  <div class="hud" id="hud-bar">
+    <div class="hud-item">
+      <div class="hud-label">BALANCE</div>
+      <div class="hud-value" id="balanceDisplay">100,000g</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">BET</div>
+      <div class="hud-value" id="betDisplay" style="color:#c9a84c">500g</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">LAST WIN</div>
+      <div class="hud-value green" id="lastWinDisplay">---</div>
+    </div>
   </div>
-  <div class="hud-item">
-    <div class="hud-label">TICKET COST</div>
-    <div class="hud-value" style="color:#c9a84c">500g</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">LAST WIN</div>
-    <div class="hud-value green" id="lastWinDisplay">---</div>
-  </div>
+
 </div>
 
 <div id="ticket-wrap">
@@ -244,11 +384,37 @@
   <div id="scratch-layer"></div>
 </div>
 
-<div id="bottom-bar">
-  <div class="result-banner idle" id="resultBanner">SCRATCH YOUR TICKET</div>
-  <button class="btn btn-reveal" id="revealAllBtn" onclick="revealAll()" disabled>Reveal All</button>
-  <button class="btn btn-buy" id="buyBtn" onclick="buyTicket()">Buy Ticket (500g)</button>
-  <button class="btn btn-debug" onclick="toggleDebug()">⬛ Debug</button>
+<div class="result-banner idle" id="resultBanner" style="position:fixed; left:856px; top:404px;">SCRATCH YOUR TICKET</div>
+<div class="result-banner win" id="winBanner" style="position:fixed; left:50%; transform:translateX(-50%); top:772px; display:none;"></div>
+
+<div id="bottom-bar" style="position:fixed; left:711px; top:819px; margin:0; display:flex; align-items:center; gap:12px;">
+  <div id="chip-bar" style="display:flex; gap:8px; align-items:center;">
+    <button class="chip-btn" onclick="selectChip(100)"   id="chip-100">  <img src="chip-100.png"></button>
+    <button class="chip-btn" onclick="selectChip(500)"   id="chip-500">  <img src="chip-500.png"></button>
+    <button class="chip-btn" onclick="selectChip(1000)"  id="chip-1000"> <img src="chip-1000.png"></button>
+    <button class="chip-btn" onclick="selectChip(5000)"  id="chip-5000"> <img src="chip-5000.png"></button>
+    <button class="chip-btn" onclick="selectChip(10000)" id="chip-10000"><img src="chip-10000.png"></button>
+  </div>
+  <button class="btn btn-reveal" id="revealAllBtn" onclick="revealAllOrClear()">Clear Bets</button>
+  <button class="btn btn-buy" id="buyBtn" onclick="buyTicket()">Buy Ticket</button>
+</div>
+
+<canvas id="fireworks-canvas"></canvas>
+
+<!-- Banner Position Debug HUD -->
+<div id="banner-debug-hud">
+  <span id="banner-coords">x:0 y:0</span>
+  <button id="banner-copy-btn" onclick="copyBannerCoords()">COPY</button>
+  <button id="banner-copy-btn" onclick="toggleBannerDebug()" style="background:#ff4444;color:#fff;">DONE</button>
+</div>
+
+<!-- Pay Table Modal -->
+<div id="paytable-modal" onclick="if(event.target===this)closePayTable()">
+  <div id="paytable-inner">
+    <h2>💰 Pay Table</h2>
+    <div id="paytable-rows"></div>
+    <button class="pt-close" onclick="closePayTable()">CLOSE</button>
+  </div>
 </div>
 
 <!-- Debug panel -->
@@ -265,7 +431,7 @@
   const ROWS = 4;
   const COLS = 3;
   const CELLS = ROWS * COLS; // 12
-  const TICKET_COST = 500;
+  let TICKET_COST = 500; // updated by chip selection
   const SCRATCH_THRESHOLD = 0.45;
 
   // Cell positions locked by Mike 2026-03-31
@@ -288,27 +454,283 @@
   let cellDefs = DEFAULT_CELLS.map(c => ({ ...c }));
 
   // Prizes as % of buy-in. img = path relative to scratch.html
+  // Weights tuned for ~90% RTP: sum(pct*w)/sum(w) ≈ 90
   const PRIZES = [
-    { pct:    5, label:   '5%', img: '../slots2/assets/images/symbols/j.png',        color: '#aaaaaa', weight: 38 },
-    { pct:   10, label:  '10%', img: '../slots2/assets/images/symbols/q.png',        color: '#cccccc', weight: 26 },
-    { pct:   25, label:  '25%', img: '../slots2/assets/images/symbols/k.png',        color: '#ffd700', weight: 16 },
-    { pct:   50, label:  '50%', img: '../slots2/assets/images/symbols/clubs.png',    color: '#ffd700', weight:  9 },
-    { pct:   75, label:  '75%', img: '../slots2/assets/images/symbols/diamonds.png', color: '#00ccff', weight:  5 },
-    { pct:  100, label: '100%', img: '../slots2/assets/images/symbols/hearts.png',   color: '#00ccff', weight:  3 },
-    { pct:  150, label: '150%', img: '../slots2/assets/images/symbols/spades.png',   color: '#ff8800', weight:  2 },
-    { pct:  200, label: '200%', img: '../slots2/assets/images/symbols/seven.png',    color: '#ff8800', weight:  1 },
-    { pct:  500, label: '500%', img: '../slots2/assets/images/symbols/scatter.png',  color: '#ff4400', weight: 0.4 },
-    { pct: 2000, label: 'JACKPOT', img: '../slots2/assets/images/symbols/wild.png',  color: '#ff0066', weight: 0.1 },
+    { pct:   10, label:  '10%', img: '../slots2/assets/images/symbols/q.png',        color: '#cccccc', weight:  9   },
+    { pct:   25, label:  '25%', img: '../slots2/assets/images/symbols/k.png',        color: '#ffd700', weight: 12   },
+    { pct:   50, label:  '50%', img: '../slots2/assets/images/symbols/clubs.png',    color: '#ffd700', weight: 21   },
+    { pct:   75, label:  '75%', img: '../slots2/assets/images/symbols/diamonds.png', color: '#00ccff', weight: 23   },
+    { pct:  125, label: '125%', img: '../slots2/assets/images/symbols/hearts.png',   color: '#00ccff', weight: 18   },
+    { pct:  150, label: '150%', img: '../slots2/assets/images/symbols/spades.png',   color: '#ff8800', weight:  8   },
+    { pct:  200, label: '200%', img: '../slots2/assets/images/symbols/seven.png',    color: '#ff8800', weight:  3.5 },
+    { pct:  500, label: '500%', img: '../slots2/assets/images/symbols/scatter.png',  color: '#ff4400', weight:  1.5 },
+    { pct: 2000, label: 'JACKPOT', img: '../slots2/assets/images/symbols/wild.png',  color: '#ff0066', weight:  0.3 },
   ];
 
   let balance = 100000;
   let buyin = 500; // updated per ticket purchase
+
+  // 🎰 CHIP SELECTION
+  function selectChip(amount) {
+    TICKET_COST += amount;
+    buyin = TICKET_COST;
+    // Highlight the last clicked chip
+    document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('chip-' + amount).classList.add('selected');
+    document.getElementById('betDisplay').textContent = TICKET_COST.toLocaleString() + 'g';
+    document.getElementById('buyBtn').disabled = balance < TICKET_COST;
+  }
+  // Default bet: 0 (player builds it with chips)
+  window.addEventListener('DOMContentLoaded', () => {
+    TICKET_COST = 0;
+    buyin = 0;
+    document.getElementById('betDisplay').textContent = '0g';
+    document.getElementById('buyBtn').disabled = true;
+  });
   let ticketActive = false;
   let ticketValues = [];
   let cellRevealed = [];
   let isScratching = false;
   let activeCellIdx = -1;
   let debugMode = false;
+
+  // 🔊 SCRATCH AUDIO
+  const scratchAudio = new Audio('scratch-sound.mp3');
+  scratchAudio.loop = true;
+  scratchAudio.volume = 0.6;
+  let scratchAudioPlaying = false;
+  let scratchStopTimer = null;
+
+  function scratchSoundStart() {
+    if (scratchStopTimer) { clearTimeout(scratchStopTimer); scratchStopTimer = null; }
+    if (!scratchAudioPlaying) {
+      scratchAudio.play().catch(() => {});
+      scratchAudioPlaying = true;
+    }
+  }
+  function scratchSoundStop() {
+    // Small debounce so brief pauses between cells don't cut audio
+    if (scratchStopTimer) clearTimeout(scratchStopTimer);
+    scratchStopTimer = setTimeout(() => {
+      scratchAudio.pause();
+      scratchAudio.currentTime = 0;
+      scratchAudioPlaying = false;
+      scratchStopTimer = null;
+    }, 120);
+  }
+
+  // 📋 PAY TABLE
+  function openPayTable() {
+    const totalWeight = PRIZES.reduce((s, p) => s + p.weight, 0);
+    const container = document.getElementById('paytable-rows');
+    container.innerHTML = '';
+    for (const p of PRIZES) {
+      const odds = ((p.weight / totalWeight) * 100).toFixed(1);
+      const row = document.createElement('div');
+      row.className = 'pt-row';
+      row.style.color = p.color;
+      row.innerHTML = `<span class="pt-prize">${p.label}</span><span class="pt-odds">${odds}% chance</span>`;
+      container.appendChild(row);
+    }
+    document.getElementById('paytable-modal').classList.add('open');
+  }
+  function closePayTable() {
+    document.getElementById('paytable-modal').classList.remove('open');
+  }
+
+  // 📐 BANNER POSITION DEBUGGER
+  let bannerDebugActive = false;
+  let bannerDrag = null;
+
+  function toggleBannerDebug() {
+    const banner = document.getElementById('resultBanner');
+    const hud    = document.getElementById('banner-debug-hud');
+    bannerDebugActive = !bannerDebugActive;
+    if (bannerDebugActive) {
+      // Snapshot current position and go fixed
+      const r = banner.getBoundingClientRect();
+      banner.style.left = r.left + 'px';
+      banner.style.top  = r.top  + 'px';
+      banner.classList.add('draggable-mode');
+      hud.classList.add('open');
+      updateBannerCoords();
+    } else {
+      banner.classList.remove('draggable-mode');
+      banner.style.left = '';
+      banner.style.top  = '';
+      hud.classList.remove('open');
+    }
+  }
+
+  function updateBannerCoords() {
+    const banner = document.getElementById('resultBanner');
+    const x = parseInt(banner.style.left) || 0;
+    const y = parseInt(banner.style.top)  || 0;
+    document.getElementById('banner-coords').textContent = `x:${x}  y:${y}`;
+  }
+
+
+  // Banner drag events (scratch banner)
+  document.addEventListener('mousedown', (e) => {
+    if (!bannerDebugActive && !winBannerDebugActive) return;
+    const scratchEl = document.getElementById('resultBanner');
+    const winEl     = document.getElementById('winBanner');
+    if (bannerDebugActive && scratchEl.contains(e.target)) {
+      bannerDrag = { el: scratchEl, startX: e.clientX, startY: e.clientY,
+                     origX: parseInt(scratchEl.style.left)||0, origY: parseInt(scratchEl.style.top)||0 };
+      e.preventDefault();
+    } else if (winBannerDebugActive && winEl.contains(e.target)) {
+      bannerDrag = { el: winEl, startX: e.clientX, startY: e.clientY,
+                     origX: parseInt(winEl.style.left)||0, origY: parseInt(winEl.style.top)||0 };
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!bannerDrag) return;
+    bannerDrag.el.style.left = (bannerDrag.origX + e.clientX - bannerDrag.startX) + 'px';
+    bannerDrag.el.style.top  = (bannerDrag.origY + e.clientY - bannerDrag.startY) + 'px';
+    if (bannerDrag.el.id === 'resultBanner') updateBannerCoords();
+    else updateWinBannerCoords();
+  });
+  document.addEventListener('mouseup', () => { bannerDrag = null; });
+
+  // 📐 DRAG DEBUGGER — press D to toggle
+  // Draggable elements: chip-bar, bottom-bar
+  const DRAG_TARGETS = [
+    { id: 'bottom-bar',  label: 'BottomBar' },
+    { id: 'top-bar',     label: 'TopBar' },
+  ];
+  let dragDebugOn = false;
+  let activeDrag  = null;
+
+  function toggleDragDebug() {
+    dragDebugOn = !dragDebugOn;
+    const hud = document.getElementById('elem-debug-hud');
+
+    DRAG_TARGETS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (dragDebugOn) {
+        // snapshot current position into fixed coords
+        const r = el.getBoundingClientRect();
+        el.style.position = 'fixed';
+        el.style.left = r.left + 'px';
+        el.style.top  = r.top  + 'px';
+        el.style.margin = '0';
+        el.style.outline = '2px dashed #00ffff';
+        el.style.cursor  = 'grab';
+        el.style.zIndex  = '8500';
+      } else {
+        el.style.outline = '';
+        el.style.cursor  = '';
+      }
+    });
+
+    if (dragDebugOn) {
+      hud.style.display = 'flex';
+      document.getElementById('elem-debug-coords').textContent = 'Drag Chips or Buttons to reposition';
+    } else {
+      hud.style.display = 'none';
+    }
+  }
+
+  function copyElemCoords() {
+    const lines = DRAG_TARGETS.map(({ id, label }) => {
+      const el = document.getElementById(id);
+      const x = Math.round(parseFloat(el.style.left) || 0);
+      const y = Math.round(parseFloat(el.style.top)  || 0);
+      return `${label} (#${id}): left:${x}px; top:${y}px;`;
+    }).join('\n');
+    navigator.clipboard.writeText(lines).catch(() => {});
+    const btn = document.querySelector('#elem-debug-hud .chip-dbtn');
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY ALL', 1500);
+  }
+
+  // D key toggles debug
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'd' || e.key === 'D') toggleDragDebug();
+    if (e.key === 'Escape' && dragDebugOn) toggleDragDebug();
+  });
+
+  // Mousedown: pick up a drag target
+  document.addEventListener('mousedown', (e) => {
+    if (!dragDebugOn) return;
+    for (const { id } of DRAG_TARGETS) {
+      const el = document.getElementById(id);
+      if (el.contains(e.target)) {
+        activeDrag = {
+          el, id,
+          startX: e.clientX, startY: e.clientY,
+          origX: parseFloat(el.style.left) || 0,
+          origY: parseFloat(el.style.top)  || 0
+        };
+        el.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+  }, true);
+
+  document.addEventListener('mousemove', (e) => {
+    if (!activeDrag) return;
+    const { el, id, startX, startY, origX, origY } = activeDrag;
+    const x = origX + e.clientX - startX;
+    const y = origY + e.clientY - startY;
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    const { label } = DRAG_TARGETS.find(t => t.id === id);
+    document.getElementById('elem-debug-coords').textContent = `${label}: left:${Math.round(x)}px; top:${Math.round(y)}px;`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (activeDrag) { activeDrag.el.style.cursor = 'grab'; activeDrag = null; }
+  });
+
+  // 📐 WIN BANNER POSITION DEBUGGER
+  let winBannerDebugActive = false;
+
+  function toggleWinBannerDebug() {
+    const el  = document.getElementById('winBanner');
+    const hud = document.getElementById('banner-debug-hud');
+    winBannerDebugActive = !winBannerDebugActive;
+    if (winBannerDebugActive) {
+      // Show a preview so it's draggable even if no win yet
+      if (el.style.display === 'none') {
+        el.style.display = '';
+        el.textContent = 'You win 125g! Match: 25%';
+      }
+      el.classList.add('draggable-mode');
+      hud.classList.add('open');
+      updateWinBannerCoords();
+    } else {
+      el.classList.remove('draggable-mode');
+      // Hide preview if it was just for positioning
+      if (el.textContent === 'You win 125g! Match: 25%') {
+        el.style.display = 'none';
+        el.textContent = '';
+      }
+      hud.classList.remove('open');
+    }
+  }
+
+  function updateWinBannerCoords() {
+    const el = document.getElementById('winBanner');
+    const x = parseInt(el.style.left) || 0;
+    const y = parseInt(el.style.top)  || 0;
+    document.getElementById('banner-coords').textContent = `x:${x}  y:${y}`;
+  }
+
+  function copyBannerCoords() {
+    const activeEl = bannerDebugActive
+      ? document.getElementById('resultBanner')
+      : document.getElementById('winBanner');
+    const x = parseInt(activeEl.style.left) || 0;
+    const y = parseInt(activeEl.style.top)  || 0;
+    navigator.clipboard.writeText(`left:${x}px; top:${y}px;`).catch(()=>{});
+    document.getElementById('banner-copy-btn').textContent = 'COPIED!';
+    setTimeout(() => document.getElementById('banner-copy-btn').textContent = 'COPY', 1500);
+  }
 
   // ── DEBUG DRAG ────────────────────────────────────────────────────────
   let dragState = null; // { idx, type:'move'|'resize', startX, startY, origX, origY, origW, origH }
@@ -482,29 +904,49 @@
       if (positions.includes(i)) {
         values.push(winPrize);
       } else {
-        // Fill rest - avoid accidentally creating a second triple
+        // Fill rest - cap any symbol at max 3 total (including winner positions)
+        // Winner already has 3, so non-winning cells must not add any more of winPrize
+        // Non-winning symbols can appear at most 2 times in non-winning slots (2 total since no triples allowed)
         let pick, attempts = 0;
         do {
           pick = weightedRandom();
           attempts++;
-          // Count how many of this pct we already have in non-winning spots
-          const existing = values.filter(v => v.pct === pick.pct).length;
-          if (existing < 2 || attempts > 15) break;
+          const totalSoFar = values.filter(v => v.pct === pick.pct).length
+                           + (pick.pct === winPrize.pct ? 3 : 0); // account for winner positions
+          if (totalSoFar < 2 || attempts > 20) break;
         } while (true);
+        // Final safety: never allow winPrize in non-winning slots (would exceed 3)
+        if (pick.pct === winPrize.pct) {
+          let safePick, att2 = 0;
+          do { safePick = weightedRandom(); att2++; } while (safePick.pct === winPrize.pct && att2 < 20);
+          pick = safePick;
+        }
         values.push(pick);
       }
     }
 
-    // Verify no accidental second triple sneaked in, fix if so
+    // Final pass: enforce hard cap of 3 max for any symbol
     const counts = {};
     for (const v of values) counts[v.pct] = (counts[v.pct] || 0) + 1;
     for (const [pct, cnt] of Object.entries(counts)) {
-      if (cnt >= 3 && parseInt(pct) !== winPrize.pct) {
-        // Replace one non-winner occurrence
+      if (cnt > 3) {
+        // Replace excess non-winner occurrences
+        let removed = 0;
         for (let i = 0; i < values.length; i++) {
-          if (values[i].pct == pct && !positions.includes(i)) {
+          if (values[i].pct == parseInt(pct) && !positions.includes(i) && removed < cnt - 3) {
             let rep, att = 0;
-            do { rep = weightedRandom(); att++; } while (rep.pct == pct && att < 15);
+            do { rep = weightedRandom(); att++; } while ((rep.pct == parseInt(pct) || rep.pct === winPrize.pct) && att < 20);
+            values[i] = rep;
+            removed++;
+          }
+        }
+      }
+      if (cnt >= 3 && parseInt(pct) !== winPrize.pct) {
+        // Replace one non-winner occurrence to prevent accidental second triple
+        for (let i = 0; i < values.length; i++) {
+          if (values[i].pct == parseInt(pct) && !positions.includes(i)) {
+            let rep, att = 0;
+            do { rep = weightedRandom(); att++; } while ((rep.pct == parseInt(pct) || rep.pct === winPrize.pct) && att < 15);
             values[i] = rep;
             break;
           }
@@ -589,13 +1031,13 @@
     // coverImg is guaranteed loaded before initCanvas is ever called
     ctx.drawImage(coverImg, 0, 0, w, h);
 
-    canvas.addEventListener('mousedown', (e) => { if (!ticketActive || cellRevealed[i]) return; isScratching = true; activeCellIdx = i; scratch(e, canvas, i); });
-    canvas.addEventListener('mousemove', (e) => { if (!isScratching || activeCellIdx !== i || !ticketActive || cellRevealed[i]) return; scratch(e, canvas, i); });
-    canvas.addEventListener('mouseup',   () => { isScratching = false; activeCellIdx = -1; });
-    canvas.addEventListener('mouseleave',() => { isScratching = false; activeCellIdx = -1; });
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if (!ticketActive || cellRevealed[i]) return; isScratching = true; activeCellIdx = i; scratch(e.touches[0], canvas, i); }, { passive: false });
-    canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); if (!isScratching || activeCellIdx !== i || !ticketActive || cellRevealed[i]) return; scratch(e.touches[0], canvas, i); }, { passive: false });
-    canvas.addEventListener('touchend',   () => { isScratching = false; activeCellIdx = -1; });
+    canvas.addEventListener('mousedown', (e) => { if (!ticketActive || cellRevealed[i]) return; isScratching = true; activeCellIdx = i; scratchSoundStart(); scratch(e, canvas, i); });
+    canvas.addEventListener('mousemove', (e) => { if (!isScratching || activeCellIdx !== i || !ticketActive || cellRevealed[i]) return; scratchSoundStart(); scratch(e, canvas, i); });
+    canvas.addEventListener('mouseup',   () => { isScratching = false; activeCellIdx = -1; scratchSoundStop(); });
+    canvas.addEventListener('mouseleave',() => { isScratching = false; activeCellIdx = -1; scratchSoundStop(); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if (!ticketActive || cellRevealed[i]) return; isScratching = true; activeCellIdx = i; scratchSoundStart(); scratch(e.touches[0], canvas, i); }, { passive: false });
+    canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); if (!isScratching || activeCellIdx !== i || !ticketActive || cellRevealed[i]) return; scratchSoundStart(); scratch(e.touches[0], canvas, i); }, { passive: false });
+    canvas.addEventListener('touchend',   () => { isScratching = false; activeCellIdx = -1; scratchSoundStop(); });
   }
 
   // Fit prize text to fill the cell as large as possible
@@ -650,6 +1092,19 @@
     if (cellRevealed.every(r => r)) finishTicket();
   }
 
+  function revealAllOrClear() {
+    if (!ticketActive) {
+      // Clear bets mode
+      TICKET_COST = 0;
+      buyin = 0;
+      document.getElementById('betDisplay').textContent = '0g';
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('buyBtn').disabled = true;
+    } else {
+      revealAll();
+    }
+  }
+
   function revealAll() {
     if (!ticketActive) return;
     for (let i = 0; i < CELLS; i++) revealCell(i);
@@ -657,7 +1112,7 @@
 
   function finishTicket() {
     ticketActive = false;
-    document.getElementById('revealAllBtn').disabled = true;
+    document.getElementById('revealAllBtn').textContent = 'Clear Bets';
 
     const winPcts = findWins(ticketValues);
     const totalWin = calcPayout(winPcts);
@@ -675,27 +1130,33 @@
     document.getElementById('lastWinDisplay').textContent = fmt(totalWin);
     document.getElementById('lastWinDisplay').className = 'hud-value green';
 
-    const banner = document.getElementById('resultBanner');
-    banner.className = 'result-banner win';
+    const winBanner = document.getElementById('winBanner');
+    winBanner.style.display = '';
     const winPrize = ticketValues.find(v => winPcts.includes(v.pct));
-    if (winPrize && winPrize.pct >= 2000)    { banner.textContent = `🎰 JACKPOT! +${fmt(totalWin)}!`;   spawnParticles('💰', 20); }
-    else if (winPrize && winPrize.pct >= 200){ banner.textContent = `🏆 BIG WIN! +${fmt(totalWin)}`;    spawnParticles('⭐', 12); }
-    else if (winPrize && winPrize.pct >= 100){ banner.textContent = `✨ WINNER! +${fmt(totalWin)}`;      spawnParticles('✨', 8); }
-    else                                      { banner.textContent = `You win ${fmt(totalWin)}! Match: ${winPrize ? winPrize.label : ''}`;  }
+    if (winPrize && winPrize.pct >= 2000)    { winBanner.textContent = `🎰 JACKPOT! +${fmt(totalWin)}!`;   spawnParticles('💰', 20); launchFireworks(6000); }
+    else if (winPrize && winPrize.pct >= 200){ winBanner.textContent = `🏆 BIG WIN! +${fmt(totalWin)}`;    spawnParticles('⭐', 12); launchFireworks(5000); }
+    else if (winPrize && winPrize.pct >= 125){ winBanner.textContent = `✨ WINNER! +${fmt(totalWin)}`;      spawnParticles('✨', 8);  launchFireworks(4000); }
+    else                                      { winBanner.textContent = `You win ${fmt(totalWin)}! Match: ${winPrize ? winPrize.label : ''}`;  }
     document.getElementById('buyBtn').disabled = balance < TICKET_COST;
   }
 
   function buyTicket() {
-    if (balance < TICKET_COST) return;
+    if (TICKET_COST <= 0 || balance < TICKET_COST) return;
     buyin = TICKET_COST;
     balance -= TICKET_COST;
+    // Reset bet display for next round
+    TICKET_COST = 0;
+    document.getElementById('betDisplay').textContent = '0g';
+    document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
     updateHUD();
     ticketValues = generateTicket();
     cellRevealed = new Array(CELLS).fill(false);
     ticketActive = true;
     document.getElementById('resultBanner').className = 'result-banner idle';
     document.getElementById('resultBanner').textContent = 'SCRATCH YOUR TICKET';
-    document.getElementById('revealAllBtn').disabled = false;
+    document.getElementById('winBanner').style.display = 'none';
+    document.getElementById('winBanner').textContent = '';
+    document.getElementById('revealAllBtn').textContent = 'Reveal All';
     document.getElementById('buyBtn').disabled = false;
     if (!debugMode) rebuildScratchCells();
   }
@@ -715,6 +1176,100 @@
         setTimeout(() => p.remove(), 2000);
       }, i * 60);
     }
+  }
+
+  // 🎆 FIREWORKS
+  const fireworksAudio = new Audio('fireworks.mp3');
+  fireworksAudio.volume = 0.7;
+  let fwAnimId = null;
+  let fwActive = false;
+
+  function launchFireworks(durationMs = 4000) {
+    if (fwActive) return;
+    fwActive = true;
+    fireworksAudio.currentTime = 0;
+    fireworksAudio.play().catch(()=>{});
+
+    const canvas = document.getElementById('fireworks-canvas');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    const particles = [];
+    const colors = ['#ff0044','#ff8800','#ffd700','#00ff88','#00ccff','#ff44ff','#ffffff'];
+
+    function Particle(x, y, vx, vy, color, life) {
+      return { x, y, vx, vy, color, life, maxLife: life, size: Math.random() * 3 + 1.5 };
+    }
+
+    function burst(x, y) {
+      const count = 60 + Math.floor(Math.random() * 40);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const color2 = colors[Math.floor(Math.random() * colors.length)];
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.3;
+        const speed = Math.random() * 6 + 2;
+        const c = Math.random() < 0.5 ? color : color2;
+        particles.push(Particle(x, y, Math.cos(angle)*speed, Math.sin(angle)*speed, c, 90 + Math.random()*30));
+      }
+    }
+
+    const startTime = performance.now();
+    let lastBurst = 0;
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Launch new bursts periodically
+      if (now - lastBurst > 300 + Math.random() * 250) {
+        const x = canvas.width  * (0.15 + Math.random() * 0.7);
+        const y = canvas.height * (0.1  + Math.random() * 0.5);
+        burst(x, y);
+        lastBurst = now;
+      }
+
+      // Update + draw particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x  += p.vx; p.y  += p.vy;
+        p.vy += 0.12; // gravity
+        p.vx *= 0.97; p.vy *= 0.97;
+        p.life--;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        const alpha = p.life / p.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      if (elapsed < durationMs) {
+        fwAnimId = requestAnimationFrame(frame);
+      } else {
+        // Drain remaining particles
+        function drain(ts) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.vx *= 0.97; p.vy *= 0.97; p.life--;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            const alpha = p.life / p.maxLife;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          if (particles.length > 0) requestAnimationFrame(drain);
+          else fwActive = false;
+        }
+        requestAnimationFrame(drain);
+      }
+    }
+    fwAnimId = requestAnimationFrame(frame);
   }
 
   // Reposition cells on resize
