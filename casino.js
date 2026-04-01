@@ -147,7 +147,6 @@ const CANDLE_SPRITE = {
 const CANDLE_POSITIONS = [
   { x: 275, y: 142, scale: 1.5 },  // bar candle 1
   { x: 355, y: 140, scale: 1.5 },  // bar candle 2
-  { x: 448, y: 143, scale: 1.5 },  // bar candle 3
   { x: 522, y: 142, scale: 1.5 },  // bar candle 4
   { x: 609, y: 142, scale: 1.5 },  // bar candle 5
   { x: 660, y: 142, scale: 1.5 },  // bar candle 6
