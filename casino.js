@@ -165,7 +165,7 @@ class CasinoScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('casino-floor', 'casino-floor-new.png?v=20260418bg1');
+    this.load.image('casino-floor', 'casino-floor-new.png?v=20260419bg2');
 
     // Load torch/sconce spritesheet
     this.load.spritesheet(TORCH_SPRITE.key, TORCH_SPRITE.file, {
