@@ -38,7 +38,8 @@ const ZONES = [
   { id: 'roulette',  label: 'Roulette',             x: 224, y: 295, w: 146, h:  53, type: 'game',        url: './roulette.html' },
   { id: 'blackjack1',label: 'Blackjack',            x: 214, y: 455, w: 105, h:  41, type: 'game',        url: './blackjack.html' },
   { id: 'uth',       label: "Ultimate Texas\nHold'em", x: 669, y: 471, w: 94, h: 58, type: 'game',       url: './uth-test.html' },
-  { id: 'kong',      label: "Dragon Crash",          x: 450, y: 430, w:  51, h:  96, type: 'game',        url: './crash.html' },
+  { id: 'crash',     label: 'Dragon Crash',         x: 450, y: 430, w:  51, h:  96, type: 'game',        url: './crash.html' },
+  { id: 'kong',      label: 'Kong',                 x: 673, y: 654, w:  51, h:  96, type: 'game',        url: './kong.html' },
   { id: 'craps',     label: 'Craps',                x: 679, y: 299, w: 132, h:  58, type: 'game',        url: './craps.html' },
   { id: 'slots',     label: 'Slots',                x: 203, y: 643, w:  59, h: 108, type: 'game',        url: './slots2/' },
   { id: 'scratch',   label: 'Lucky Scratch',        x: 449, y: 123, w:  85, h:  65, type: 'game',        url: './scratch.html' },
@@ -414,7 +415,8 @@ class CasinoScene extends Phaser.Scene {
       roulette:   { fill: 0x00ff00, alpha: 0.25, stroke: 0x00ff00 },  // green
       blackjack1: { fill: 0xff0000, alpha: 0.25, stroke: 0xff0000 },  // red
       uth:        { fill: 0x0088ff, alpha: 0.25, stroke: 0x0088ff },  // blue
-      kong:       { fill: 0xff8800, alpha: 0.25, stroke: 0xff8800 },  // orange
+      crash:      { fill: 0xff8800, alpha: 0.28, stroke: 0xff8800 },  // orange
+      kong:       { fill: 0xcc6600, alpha: 0.22, stroke: 0xcc6600 },  // amber
       bar:        { fill: 0xffff00, alpha: 0.15, stroke: 0xffff00 },  // yellow
       craps:      { fill: 0xff00ff, alpha: 0.25, stroke: 0xff00ff },  // magenta
       slots:      { fill: 0x00ffff, alpha: 0.25, stroke: 0x00ffff },  // cyan
@@ -728,8 +730,8 @@ class CasinoScene extends Phaser.Scene {
 
     const zoneColors = {
       roulette:   '🟩', blackjack1: '🟥', uth: '🟦',
-      kong:       '🟧', craps:      '🟪', slots: '🟦',
-      bar:        '🟨'
+      crash:      '🟧', kong:       '🟫', craps: '🟪', slots: '🟦',
+      scratch:    '🟪', bar:        '🟨'
     };
 
     const lines = [];
