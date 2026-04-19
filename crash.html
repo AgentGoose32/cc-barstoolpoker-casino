@@ -1,713 +1,1954 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dragon's Flight - HoH Casino</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-  background:#0a0e1a;
-  color:#ccc;
-  font-family:'Courier New',monospace;
-  display:flex;justify-content:center;align-items:center;
-  min-height:100vh;
-  overflow:hidden;
-}
-#game-wrap{
-  width:800px;max-width:100vw;
-  background:linear-gradient(180deg,#0a0e1a 0%,#111827 40%,#0d1117 100%);
-  border:2px solid #ffd70066;
-  border-radius:8px;
-  box-shadow:0 0 30px rgba(255,215,0,0.15),inset 0 0 60px rgba(0,0,0,0.5);
-  position:relative;
-  overflow:hidden;
-}
-/* stone texture overlay */
-#game-wrap::before{
-  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
-  background:repeating-conic-gradient(rgba(255,255,255,0.01) 0% 25%,transparent 0% 50%) 0 0/40px 40px;
-  pointer-events:none;z-index:0;
-}
-#game-wrap>*{position:relative;z-index:1;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Crash - Fantasy Casino</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* TOP BAR */
-.top-bar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 12px;
-  background:rgba(15,20,35,0.95);
-  border-bottom:1px solid #ffd70033;
-}
-.history{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
-.history-item{
-  font-size:12px;font-weight:bold;padding:2px 7px;border-radius:4px;
-  background:rgba(0,0,0,0.4);
-}
-.history-item.red{color:#ff3333;}
-.history-item.yellow{color:#ffcc00;}
-.history-item.green{color:#44ff88;}
-.bal-display{
-  font-family:'Cinzel',serif;color:#ffd700;font-size:14px;white-space:nowrap;margin-left:10px;
-}
-.bal-display strong{font-size:16px;}
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
 
-/* CANVAS */
-#flight-canvas{
-  display:block;width:100%;height:380px;
-  background:transparent;
-}
+        body {
+            background: #2a2416 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><pattern id="stone" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="%232a2416"/><rect x="0" y="0" width="49" height="49" fill="%232a2416" stroke="%231a1410" stroke-width="1"/><circle cx="25" cy="25" r="15" fill="%23322a1e" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23stone)"/></svg>');
+            color: #d4af37;
+            font-family: 'Georgia', 'Garamond', serif;
+        }
 
-/* MULTIPLIER OVERLAY */
-#mult-overlay{
-  position:absolute;top:80px;left:0;right:0;
-  text-align:center;pointer-events:none;
-  font-family:'Cinzel',serif;font-size:72px;font-weight:900;
-  color:#ffd700;
-  text-shadow:0 0 20px rgba(255,215,0,0.6),0 0 40px rgba(255,215,0,0.3);
-  transition:color 0.1s;
-  z-index:10;
-}
-#mult-overlay.crashed{
-  color:#ff3333;
-  text-shadow:0 0 20px rgba(255,0,0,0.6),0 0 40px rgba(255,0,0,0.3);
-}
+        #container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            gap: 12px;
+            padding: 15px;
+            background: #000000;
+        }
 
-/* RESULT OVERLAY */
-#result-overlay{
-  position:absolute;top:180px;left:0;right:0;
-  text-align:center;pointer-events:none;
-  font-family:'Cinzel',serif;font-size:36px;font-weight:700;
-  opacity:0;transition:opacity 0.3s;
-  z-index:11;
-}
-#result-overlay.show{opacity:1;}
-#result-overlay.win{color:#44ff88;text-shadow:0 0 15px rgba(68,255,136,0.5);}
-#result-overlay.lose{color:#ff3333;text-shadow:0 0 15px rgba(255,51,51,0.5);}
+        #gameArea {
+            flex: 1;
+            position: relative;
+            background: 
+                #000000;
+            border: 6px solid;
+            border-color: #8b8070 #3a3020 #3a3020 #8b8070;
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: 
+                inset 2px 2px 5px rgba(0, 0, 0, 0.8),
+                inset -2px -2px 5px rgba(0, 0, 0, 0.8),
+                0 0 40px rgba(0, 0, 0, 0.5);
+        }
 
-/* PHASE LABEL */
-#phase-label{
-  position:absolute;top:50px;left:0;right:0;
-  text-align:center;pointer-events:none;
-  font-family:'Cinzel',serif;font-size:18px;
-  color:#aaa;opacity:0.7;
-  z-index:10;
-}
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
 
-/* BOTTOM PANEL */
-.bottom-panel{
-  background:rgba(15,20,35,0.95);
-  border-top:1px solid #ffd70033;
-  padding:10px 12px;
-}
-.chips-row{
-  display:flex;justify-content:center;gap:6px;margin-bottom:8px;
-}
-.chip-btn{
-  background:none;border:2px solid transparent;border-radius:50%;
-  cursor:pointer;padding:2px;transition:all 0.15s;
-  width:56px;height:56px;display:flex;align-items:center;justify-content:center;
-}
-.chip-btn img{width:48px;height:48px;border-radius:50%;pointer-events:none;}
-.chip-btn:hover{transform:scale(1.1);border-color:#ffd70066;}
-.chip-btn.selected{border-color:#ffd700;box-shadow:0 0 10px rgba(255,215,0,0.4);}
 
-.controls-row{
-  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
-}
-.bet-display{
-  font-family:'Cinzel',serif;color:#ffd700;font-size:16px;min-width:120px;text-align:center;
-}
-.bet-display small{color:#aaa;font-size:11px;display:block;}
 
-.auto-cashout-wrap{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-}
-.auto-cashout-wrap label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;}
-.auto-cashout-wrap input{
-  width:70px;text-align:center;
-  background:rgba(0,0,0,0.5);border:1px solid #ffd70044;
-  color:#ffd700;font-family:monospace;font-size:14px;
-  padding:4px;border-radius:4px;outline:none;
-}
-.auto-cashout-wrap input:focus{border-color:#ffd700;}
-#auto-label{font-size:10px;color:#888;height:14px;}
+        .fog {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: radial-gradient(ellipse at 50% 100%, rgba(50, 40, 20, 0.5), transparent);
+            animation: fogRoll 10s infinite;
+        }
 
-#btn-bet,#btn-cashout{
-  font-family:'Cinzel',serif;font-size:16px;font-weight:700;
-  padding:10px 28px;border:none;border-radius:6px;cursor:pointer;
-  text-transform:uppercase;letter-spacing:1px;
-  transition:all 0.15s;
-}
-#btn-bet{
-  background:linear-gradient(180deg,#ffd700,#b8960f);color:#0a0e1a;
-}
-#btn-bet:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 15px rgba(255,215,0,0.4);}
-#btn-bet:disabled{opacity:0.3;cursor:default;transform:none;}
+        @keyframes fogRoll {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+        }
 
-#btn-cashout{
-  background:linear-gradient(180deg,#44ff88,#22aa55);color:#0a0e1a;
-  display:none;
-}
-#btn-cashout:hover:not(:disabled){transform:scale(1.05);}
-#btn-cashout:disabled{opacity:0.3;cursor:default;transform:none;}
-#btn-cashout.active{
-  display:inline-block;
-  animation:pulseGreen 0.8s ease-in-out infinite;
-}
-@keyframes pulseGreen{
-  0%,100%{box-shadow:0 0 8px rgba(68,255,136,0.3);}
-  50%{box-shadow:0 0 20px rgba(68,255,136,0.6);}
-}
+        #sidebar {
+            width: 320px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+            padding: 0;
+        }
 
-#btn-clear{
-  background:rgba(255,50,50,0.2);border:1px solid #ff333366;
-  color:#ff6666;font-size:12px;padding:6px 12px;border-radius:4px;cursor:pointer;
-  font-family:monospace;
-}
-#btn-clear:hover{background:rgba(255,50,50,0.35);}
+        .panel {
+            background: #0a0a0a;
+            border: 4px solid;
+            border-color: #8b8070 #2a2410 #2a2410 #8b8070;
+            border-radius: 1px;
+            padding: 6px;
+            box-shadow: 
+                inset 2px 2px 3px rgba(0, 0, 0, 0.5),
+                inset -2px -2px 3px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-/* MUTE BTN */
-#muteBtn{
-  position:absolute;top:8px;right:10px;z-index:999;
-  background:rgba(0,0,0,0.6);border:1px solid #4aff7a44;
-  color:#ffd700;font-size:18px;padding:4px 9px;border-radius:6px;
-  cursor:pointer;line-height:1;
-}
+        .panel-title {
+            font-family: 'Georgia', 'Garamond', serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #3a3020;
+            border-top: 1px solid #8b8070;
+            padding: 2px 0;
+            flex-shrink: 0;
+        }
 
-/* SCREEN FLASH */
-#screen-flash{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  background:rgba(255,0,0,0.3);opacity:0;pointer-events:none;
-  transition:opacity 0.1s;z-index:20;
-}
-#screen-flash.flash{opacity:1;}
-</style>
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2px 0;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .stat-label {
+            color: #a89060;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #d4af37;
+            font-family: 'Georgia', 'Garamond', serif;
+        }
+
+        .multiplier-display {
+            text-align: center;
+            margin: 2px 0;
+            border: 3px solid #d4af37;
+            border-radius: 1px;
+            padding: 4px 3px;
+            background: #0a0a0a;
+            box-shadow: 
+                inset 1px 1px 2px rgba(0, 0, 0, 0.8),
+                0 0 25px rgba(212, 175, 55, 0.4);
+            flex-shrink: 0;
+        }
+
+        .multiplier-value {
+            font-family: 'Georgia', 'Garamond', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #d4af37;
+            text-shadow: 
+                2px 2px 0 rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(212, 175, 55, 0.9),
+                0 0 60px rgba(212, 175, 55, 0.5);
+            animation: none;
+            line-height: 1;
+        }
+
+        .multiplier-value.pulse {
+            animation: multiplierPulse 0.4s ease-out;
+        }
+
+        @keyframes multiplierPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 175, 55, 1), 0 0 80px rgba(212, 175, 55, 0.7); }
+            100% { transform: scale(1); }
+        }
+
+        .bet-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .bet-btn {
+            padding: 4px 2px;
+            background: #0a0a0a;
+            border: 2px solid;
+            border-color: #8b8070 #2a2410 #2a2410 #8b8070;
+            color: #d4af37;
+            border-radius: 1px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            transition: all 0.15s;
+            font-family: 'Georgia', serif;
+            box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.6);
+            flex-shrink: 0;
+        }
+
+        .bet-btn:hover {
+            background: #0a0a0a;
+            box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.4);
+        }
+
+        .bet-btn:active {
+            border-color: #2a2410 #8b8070 #8b8070 #2a2410;
+            box-shadow: inset 2px 2px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 4px;
+            margin: 2px 0;
+            flex-shrink: 0;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 4px 3px;
+            background: #3a3020;
+            border: 2px solid;
+            border-color: #2a2410 #8b8070 #8b8070 #2a2410;
+            color: #d4af37;
+            border-radius: 1px;
+            font-family: 'Georgia', serif;
+            font-size: 10px;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="number"]::placeholder {
+            color: #7a7060;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #d4af37 #2a2410 #2a2410 #d4af37;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5), 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .primary-btn {
+            padding: 6px 8px;
+            background: repeating-linear-gradient(90deg, #d4af37, #d4af37 1px, #c9a030 1px, #c9a030 2px);
+            border: 2px solid;
+            border-color: #8b8070 #2a2410 #2a2410 #8b8070;
+            color: #1a1410;
+            border-radius: 1px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Georgia', serif;
+            font-size: 10px;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3), 0 0 15px rgba(212, 175, 55, 0.4);
+            flex-shrink: 0;
+        }
+
+        .primary-btn:hover {
+            box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+
+        .primary-btn:active {
+            border-color: #2a2410 #8b8070 #8b8070 #2a2410;
+            box-shadow: inset 2px 2px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        .primary-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .cashout-btn {
+            width: 100%;
+            padding: 8px 6px;
+            background: repeating-linear-gradient(90deg, #a01a1a, #a01a1a 1px, #8b1414 1px, #8b1414 2px);
+            border: 2px solid;
+            border-color: #d4614a #2a1410 #2a1410 #d4614a;
+            color: #fff;
+            border-radius: 1px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Georgia', serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.15s;
+            margin-top: 2px;
+            box-shadow: inset 1px 1px 0 rgba(255, 100, 100, 0.2), 0 0 20px rgba(160, 26, 26, 0.4);
+            flex-shrink: 0;
+        }
+
+        .cashout-btn:hover:not(:disabled) {
+            background: repeating-linear-gradient(90deg, #b02a2a, #b02a2a 1px, #9b2424 1px, #9b2424 2px);
+            box-shadow: inset 1px 1px 0 rgba(255, 100, 100, 0.3), 0 0 30px rgba(160, 26, 26, 0.7);
+        }
+
+        .cashout-btn:active {
+            border-color: #2a1410 #d4614a #d4614a #2a1410;
+            box-shadow: inset 2px 2px 2px rgba(0, 0, 0, 0.6);
+        }
+
+        .cashout-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .cashout-btn.pulse-urgent {
+            animation: pulseUrgent 0.5s infinite;
+        }
+
+        @keyframes pulseUrgent {
+            0%, 100% { box-shadow: inset 1px 1px 0 rgba(255, 100, 100, 0.2), 0 0 20px rgba(160, 26, 26, 0.6); }
+            50% { box-shadow: inset 1px 1px 0 rgba(255, 100, 100, 0.4), 0 0 40px rgba(160, 26, 26, 1); }
+        }
+
+        .history {
+            display: flex;
+            gap: 3px;
+            margin: 2px 0;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .history-chip {
+            min-width: 52px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #16100c;
+            border: 2px solid rgba(255,255,255,0.35);
+            font-family: 'Georgia', serif;
+            flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16);
+            letter-spacing: 0.2px;
+        }
+
+        .history-chip.high {
+            background: linear-gradient(135deg, #9ef0b2 0%, #5fdb84 58%, #2eaf63 100%);
+            border-color: #dafbe3;
+            color: #0f2416;
+        }
+
+        .history-chip.mid {
+            background: linear-gradient(135deg, #ffe58d 0%, #ffd14c 58%, #dfa423 100%);
+            border-color: #fff2be;
+            color: #2d1d06;
+        }
+
+        .history-chip.low {
+            background: linear-gradient(135deg, #ffaca3 0%, #ff7a6f 58%, #de4f4a 100%);
+            border-color: #ffd2cc;
+            color: #2b0e0c;
+        }
+
+        .crash-flash {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(255,220,180,0.9) 0%, rgba(255,90,90,0.45) 38%, rgba(255,0,0,0) 75%);
+            opacity: 0;
+            z-index: 30;
+        }
+
+        .crash-flash.show {
+            animation: crashFlash 650ms ease-out forwards;
+        }
+
+        @keyframes crashFlash {
+            0% { opacity: 0; }
+            15% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .screen-shake {
+            animation: screenShake 550ms ease-in-out;
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0,0); }
+            20% { transform: translate(-8px, 4px); }
+            40% { transform: translate(8px, -4px); }
+            60% { transform: translate(-6px, -2px); }
+            80% { transform: translate(6px, 3px); }
+        }
+
+        .cashout-win {
+            background: linear-gradient(135deg, rgba(255,236,150,0.28), rgba(89,214,124,0.24));
+            border-radius: 8px;
+            padding: 2px 6px;
+            box-shadow: 0 0 14px rgba(89,214,124,0.25);
+        }
+
+        .cashout-button-win {
+            animation: cashoutPulse 700ms ease-out 2;
+        }
+
+        @keyframes cashoutPulse {
+            0% { filter: drop-shadow(0 0 0 rgba(255,235,140,0)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 18px rgba(255,235,140,0.95)); transform: scale(1.06); }
+            100% { filter: drop-shadow(0 0 0 rgba(255,235,140,0)); transform: scale(1); }
+        }
+
+        .players-feed {
+            flex: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.95);
+        }
+
+        .player-action {
+            display: grid;
+            grid-template-columns: minmax(58px, 1fr) 58px 88px minmax(62px, auto);
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            background: rgba(18,12,8,0.78);
+            border: 1px solid rgba(214,184,124,0.18);
+            border-radius: 6px;
+            color: #f3e7c9;
+            font: 700 12px Georgia, serif;
+            line-height: 1.2;
+        }
+
+        .player-action .name {
+            color: #fff3cf;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-action .mult {
+            color: #8fd6ff;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .player-action .cashout-text {
+            color: #eadfbe;
+            opacity: 0.95;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .player-action .loss-text {
+            color: #ffb7b7;
+            opacity: 0.95;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .player-action .amount {
+            color: #9df0a8;
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .player-action-loss {
+            grid-template-columns: minmax(58px, 1fr) 88px minmax(62px, auto);
+            background: rgba(45, 12, 12, 0.82);
+            border-color: rgba(255, 120, 120, 0.18);
+        }
+
+        .player-action-loss .amount {
+            color: #ff9a9a;
+        }
+
+        .players-feed {
+            overflow-y: auto;
+            font-size: 9px;
+            min-height: 40px;
+            scrollbar-width: thin;
+            scrollbar-color: #6a6250 #3a3020;
+        }
+        
+        .players-feed::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .players-feed::-webkit-scrollbar-track {
+            background: #3a3020;
+        }
+        
+        .players-feed::-webkit-scrollbar-thumb {
+            background: #6a6250;
+        }
+
+        .player-action {
+            padding: 2px 0;
+            border-bottom: 1px solid #3a3020;
+            color: #9a8070;
+            font-family: 'Georgia', serif;
+            line-height: 1.1;
+            flex-shrink: 0;
+        }
+
+        .player-action .name {
+            color: #d4af37;
+            font-weight: 700;
+        }
+
+        .player-action .amount {
+            color: #e4c957;
+            font-weight: 700;
+        }
+
+        .status-text {
+            text-align: center;
+            font-size: 11px;
+            margin: 2px 0;
+            min-height: 14px;
+            font-family: 'Georgia', serif;
+            flex-shrink: 0;
+        }
+
+        .status-betting {
+            color: #c9a030;
+            font-weight: 700;
+        }
+
+        .status-running {
+            color: #d4af37;
+            font-weight: 700;
+        }
+
+        .status-crashed {
+            color: #a01a1a;
+            font-weight: 700;
+        }
+
+        .countdown {
+            font-family: 'Georgia', serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: #d4af37;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.6);
+            text-align: center;
+            margin: 1px 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .game-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Georgia', serif;
+            font-size: 72px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .game-message.show {
+            display: block;
+            animation: messageAppear 0.6s ease-out;
+        }
+
+        @keyframes messageAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .message-victory {
+            color: #d4af37;
+            text-shadow: 
+                3px 3px 0 rgba(0, 0, 0, 0.9),
+                0 0 50px rgba(212, 175, 55, 1),
+                0 0 100px rgba(212, 175, 55, 0.8);
+        }
+
+        .message-crash {
+            color: #c41e3a;
+            text-shadow: 
+                3px 3px 0 rgba(0, 0, 0, 0.9),
+                0 0 50px rgba(196, 30, 58, 1),
+                0 0 100px rgba(196, 30, 58, 0.8);
+        }
+
+        .seed-display {
+            background: #3a3020;
+            border: 2px solid;
+            border-color: #2a2410 #8b8070 #8b8070 #2a2410;
+            padding: 3px;
+            border-radius: 1px;
+            font-size: 8px;
+            color: #7a7060;
+            word-break: break-all;
+            font-family: 'Georgia', monospace;
+            margin: 1px 0;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.5);
+            line-height: 1.1;
+            flex-shrink: 0;
+            max-height: 40px;
+            overflow-y: auto;
+        }
+
+        .scroll-area {
+            scrollbar-width: thin;
+            scrollbar-color: #6a6250 #3a3020;
+        }
+
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-area::-webkit-scrollbar-track {
+            background: #3a3020;
+        }
+
+        .scroll-area::-webkit-scrollbar-thumb {
+            background: #6a6250;
+            border-radius: 1px;
+        }
+
+        @media (max-width: 1200px) {
+            #container {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: auto;
+                max-height: none;
+            }
+
+            .multiplier-value {
+                font-size: 36px;
+            }
+        }
+
+        /* UO-style sparkles and rune effects */
+        @keyframes runeGlow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes sparkleFloat {
+            0% { transform: translateY(0) translateX(0); opacity: 1; }
+            100% { transform: translateY(-50px) translateX(20px); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-<div id="game-wrap">
-  <button id="muteBtn" onclick="toggleMute()" title="Toggle music">&#x1f50a;</button>
-  <audio id="bgMusic" loop src="./bg-music.mp3"></audio>
-  <div id="screen-flash"></div>
+    <div id="container">
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+            <div class="fog"></div>
+            <div id="crashFlash" class="crash-flash"></div>
+            <div class="game-message" id="gameMessage"></div>
+            <div id="gameActionBar" style="display:none;position:absolute;top:82%;left:50%;width:420px;transform:translate(-50%,-50%);z-index:20;align-items:center;gap:8px;pointer-events:auto;">
+                <div style="flex:1;min-width:0;background:rgba(0,0,0,0.78);border:1px solid #8b6914;border-radius:4px;padding:10px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:72px;">
+                    <div id="payoutMult" style="font:bold 22px Georgia,serif;color:#ffffff;line-height:1;">1.00x</div>
+                    <div id="payoutAmt" style="font:bold 15px Georgia,serif;color:#4ade80;line-height:1.2;margin-top:2px;">+ 0 coins</div>
+                </div>
+                <button id="cashOutBtn" onclick="cashout()" style="width:210px;height:72px;padding:0;background:url('./cashout_button.svg?v=3') center/contain no-repeat;color:transparent;font:0/0 a;border:none;border-radius:0;cursor:pointer;box-shadow:none;">Cash Out</button>
+            </div>
+        </div>
 
-  <!-- TOP BAR -->
-  <div class="top-bar">
-    <div class="history" id="history"></div>
-    <div class="bal-display">Balance: <strong id="balance">100,000</strong>g</div>
-  </div>
+        <div id="sidebar" style="position:fixed;left:83.1%;top:0%;width:326px;transform:scale(0.97);transform-origin:top left;z-index:10;flex-shrink:0;">
+            <!-- Sidebar image as full background -->
+            <img src="./sidebar3.png?v=1" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:0;" />
 
-  <!-- CANVAS AREA -->
-  <div style="position:relative;">
-    <canvas id="flight-canvas" width="800" height="380"></canvas>
-    <div id="phase-label">PLACE YOUR BETS</div>
-    <div id="mult-overlay">1.00x</div>
-    <div id="result-overlay"></div>
-  </div>
+            <!-- Overlaid interactive elements -->
+            <div style="position:relative;z-index:1;padding:0;height:100%;">
 
-  <!-- BOTTOM PANEL -->
-  <div class="bottom-panel">
-    <div class="chips-row">
-      <div class="chip-btn" id="chip-100" onclick="selectChip(100)"><img src="https://drive.google.com/thumbnail?id=1hx7VaQG7UFHtdOE_uGJ64cOuedd81n-x&sz=w120" alt="100"></div>
-      <div class="chip-btn" id="chip-500" onclick="selectChip(500)"><img src="https://drive.google.com/thumbnail?id=1IJ7Lp03TQ7rJjetXNoUGq9TB5b8sJmTs&sz=w120" alt="500"></div>
-      <div class="chip-btn" id="chip-1000" onclick="selectChip(1000)"><img src="https://drive.google.com/thumbnail?id=1gN38szt9JExdAZrVipnRKahg9zLwGtOq&sz=w120" alt="1K"></div>
-      <div class="chip-btn" id="chip-5000" onclick="selectChip(5000)"><img src="https://drive.google.com/thumbnail?id=11cxGHjfNZFIJgTXnQGmFDSFK-1fUhVup&sz=w120" alt="5K"></div>
-      <div class="chip-btn" id="chip-10000" onclick="selectChip(10000)"><img src="https://drive.google.com/thumbnail?id=10SkRQCPz-BckF4jBUS0noiSmThGsyx47&sz=w120" alt="10K"></div>
-    </div>
-    <div class="controls-row">
-      <button id="btn-clear" onclick="clearBet()">CLR</button>
-      <div class="bet-display">
-        <small>BET</small>
-        <span id="bet-amount">0</span>g
-      </div>
-      <div class="auto-cashout-wrap">
-        <label>Auto Cashout</label>
-        <input type="text" id="auto-cashout" value="2.00" maxlength="6">
-        <span id="auto-label"></span>
-      </div>
-      <button id="btn-bet" onclick="placeBet()">BET</button>
-      <button id="btn-cashout" onclick="cashOut()">CASH OUT</button>
-    </div>
-  </div>
-</div>
+                <!-- Status values -->
+                <div id="statusText" style="display:none;"></div>
+                <div id="countdownText" style="display:none;"></div>
+                <div id="balanceValue" style="position:absolute;top:4.7%;left:42%;font:bold 23px Georgia,serif;color:#ffd700;transform:scale(1.36);transform-origin:top left;">50000</div>
+                <div id="currentBetValue" style="position:absolute;top:8.3%;left:44.2%;font:bold 23px Georgia,serif;color:#ffffff;transform:scale(1.35);transform-origin:top left;">0</div>
+                <div id="winningsValue" style="display:none;"></div>
+
+                <!-- Top countdown bar -->
+                <div id="topBarBlock" style="position:absolute;top:0.2%;left:18%;width:76.88%;height:4.31%;display:flex;align-items:center;justify-content:center;gap:18px;z-index:7;border:none;background:transparent;box-shadow:none;cursor:default;user-select:none;">
+                    <div class="multiplier-value" id="multiplierValue" style="font-size:22px;white-space:nowrap;">1.00x</div>
+                    <div id="nextRoundCountdown" style="font:bold 16px Georgia,serif;color:#e7d6b0;text-shadow:0 1px 2px rgba(0,0,0,0.9);letter-spacing:0.5px;white-space:nowrap;">Next round in 8s</div>
+                    </div>
+
+                <!-- Chip bet buttons -->
+                <div id="chipBar" style="position:absolute;top:28.5%;left:4%;transform:scale(1.05);transform-origin:top left;width:92%;display:flex;gap:6px;justify-content:center;align-items:center;z-index:5;">
+                    <button onclick="setBetAmount(100)" style="background:none;border:none;padding:0;cursor:pointer;">
+                        <img src="./chip_100.png?v=1" style="width:48px;height:48px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                    </button>
+                    <button onclick="setBetAmount(500)" style="background:none;border:none;padding:0;cursor:pointer;">
+                        <img src="./chip_500.png?v=1" style="width:48px;height:48px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                    </button>
+                    <button onclick="setBetAmount(1000)" style="background:none;border:none;padding:0;cursor:pointer;">
+                        <img src="./chip_1000.png?v=1" style="width:48px;height:48px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                    </button>
+                    <button onclick="setBetAmount(5000)" style="background:none;border:none;padding:0;cursor:pointer;">
+                        <img src="./chip_5000.png?v=1" style="width:48px;height:48px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                    </button>
+                    <button onclick="setBetAmount(10000)" style="background:none;border:none;padding:0;cursor:pointer;">
+                        <img src="./chip_10000.png?v=1" style="width:48px;height:48px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                    </button>
+                </div>
+                <!-- Bet input + confirm -->
+                <div id="betInputWrap" style="position:absolute;top:34%;left:8%;">
+                <input type="number" id="betInput"  placeholder="Amount" min="0.1" step="0.1"
+                    style="width:130px;padding:6px;background:rgba(0,0,0,0.7);border:1px solid #8b6914;border-radius:4px;color:#ffd700;font:14px Georgia,serif;text-align:center;" />
+                </div>
+                <button id="confirmBetBtn" onclick="confirmBet()" aria-label="Confirm Bet" title="Confirm Bet"
+                    style="position:absolute;top:41%;left:8%;width:84%;height:40px;padding:0;background:transparent;color:#f7e7a8;font:bold 18px Georgia,serif;letter-spacing:1px;text-shadow:0 1px 2px rgba(0,0,0,0.9),0 0 6px rgba(0,0,0,0.65);border:none;border-radius:4px;cursor:pointer;box-shadow:none;appearance:none;-webkit-appearance:none;z-index:3;display:flex;align-items:center;justify-content:center;">CONFIRM</button>
+
+                <!-- Auto cashout rebuilt -->
+                <div id="autoCashoutBlock" style="position:absolute;top:47.11%;left:2.17%;width:42.28%;height:3.37%;z-index:6;display:block;border:none;background:transparent;box-shadow:none;cursor:default;user-select:none;">
+                    <input type="number" id="autoCashoutInput" placeholder="" min="1.01" step="0.01"
+                        style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;height:100%;padding:0 6px;background:transparent;border:none;border-radius:0;color:#e7d6b0;font:14px Georgia,serif;box-shadow:none;text-align:center;outline:none;cursor:text;" />
+                    
+                </div>
+
+
+                <!-- History -->
+                <div id="historyBlock" style="position:absolute;top:13.43%;left:23.34%;width:72.04%;height:4.68%;z-index:6;display:block;border:none;background:transparent;box-shadow:none;cursor:default;user-select:none;">
+                    <div class="history" id="historyContainer"
+                        style="position:absolute;top:8%;left:0;width:100%;height:92%;overflow-y:auto;font:11px Georgia,serif;color:#ccc;"></div>
+                    
+                </div>
+
+
+                <!-- Players feed -->
+                <div id="playersFeedBlock" style="position:absolute;top:57.64%;left:4.93%;width:89.83%;height:40%;z-index:6;display:block;border:none;background:transparent;box-shadow:none;cursor:default;user-select:none;">
+                    <div class="players-feed" id="playersFeed"
+                        style="position:absolute;top:0;left:0;width:100%;height:100%;overflow-y:auto;font:11px Georgia,serif;color:#ccc;"></div>
+                    
+                </div>
+
+
+                <!-- Hidden cashout button (kept for JS compatibility) -->
+                <button id="cashoutBtn" onclick="cashout()" disabled style="display:none;"></button>
+            </div>
+        </div>
+
+    <script>
+// Platform/bolt debugger init -- set BEFORE game script runs
+window._platX = 0.780;
+window._platY = 1.000;
+window._platH = 0.600;
+window._wheelPctX = 0.310;
+window._wheelPctY = 0.055;
+window._boltScale = 0.110;
+window._wheelX = null;
+window._wheelY = null;
+window._barrelTipWorldX = null;
+window._barrelTipWorldY = null;
+window._bgPanX = 0.24;
+window._bgPanY = 0.85;
+window._bgDebugScale = 1.00;
+</script>
+<script>
+        // Game State
+        let gameState = {
+            balance: 50000,
+            currentBet: 0,
+            roundBet: 0,
+            autoCashoutTarget: null,
+            multiplier: 1.0,
+            isRunning: false,
+            isBetting: false,
+            crashed: false,
+            bettingPhaseTime: 8,
+            bettingCountdown: 8,
+            gameStartTime: 0,
+            crashPoint: 0,
+            seed: '',
+            history: [],
+            winnings: 0,
+            cashedOut: false
+        };
+
+        // Dragon and Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Dragon sprite preloader
+        const dragonFrames = [];
+        let dragonFramesLoaded = 0;
+        const DRAGON_FRAME_COUNT = 48;
+        for (let i = 1; i <= DRAGON_FRAME_COUNT; i++) {
+            const img = new Image();
+            img.onload = () => { dragonFramesLoaded++; };
+            img.src = `./dragon_locked/frame${String(i).padStart(2,'0')}.png?v=1`;
+            dragonFrames.push(img);
+        }
+        let dragonFrameIndex = 0;
+        let dragonFrameTimer = 0;
+        let particles = [];
+        let trail = [];
+
+        // Responsive canvas sizing with ResizeObserver
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        resizeCanvas();
+        
+        // Use ResizeObserver for better responsiveness
+        const resizeObserver = new ResizeObserver(() => {
+            resizeCanvas();
+        });
+        resizeObserver.observe(canvas.parentElement);
+        
+        window.addEventListener('resize', resizeCanvas);
+
+        // Provably Fair RNG
+        function generateSeed() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        function crashPointFromSeed(seed) {
+            // Hash seed to float 0-1
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                const char = seed.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            const h = Math.abs(hash) / 2147483647;
+            // Standard crash formula -- 97% RTP (3% house edge)
+            // P(survive to 2x) = 48.5%, P(survive to 3x) = 32%, etc.
+            // crash = 97 / (1 - h), capped at 1.00x minimum
+            const crash = Math.floor(97 / (1 - h)) / 100;
+            return Math.max(1.00, crash);
+        }
+
+        // Dragon Drawing - Ultima Online Style (angular, pixelated, classic 90s fantasy art)
+        function drawDragon(x, y, scale = 1, wingFlap = 0) {
+            // Use real 3D rendered sprite if loaded
+            if (dragonFramesLoaded >= DRAGON_FRAME_COUNT) {
+                dragonFrameTimer++;
+                if (dragonFrameTimer >= 2) {
+                    dragonFrameTimer = 0;
+                    dragonFrameIndex = (dragonFrameIndex + 1) % DRAGON_FRAME_COUNT;
+                }
+                const frame = dragonFrames[dragonFrameIndex];
+                // Locked: frames already flipped/rotated/-30deg/71% scale
+                const w = frame.naturalWidth || 568;
+                const h = frame.naturalHeight || 398;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.drawImage(frame, -w / 2, -h / 2, w, h);
+                ctx.restore();
+                return;
+            }
+
+            // Fallback: canvas-drawn dragon
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            // Main body - more angular and dragon-like
+            ctx.fillStyle = '#4a2a3a';
+            ctx.beginPath();
+            ctx.moveTo(-25, -8);
+            ctx.lineTo(-10, -15);
+            ctx.lineTo(15, -15);
+            ctx.lineTo(30, -8);
+            ctx.lineTo(25, 5);
+            ctx.lineTo(0, 10);
+            ctx.lineTo(-20, 8);
+            ctx.closePath();
+            ctx.fill();
+
+            // Body outline
+            ctx.strokeStyle = '#2a1a2a';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Dorsal spikes along back
+            ctx.fillStyle = '#d4af37';
+            for (let i = -20; i <= 20; i += 8) {
+                ctx.beginPath();
+                ctx.moveTo(i, -15);
+                ctx.lineTo(i - 3, -25);
+                ctx.lineTo(i + 3, -25);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Neck
+            ctx.fillStyle = '#4a2a3a';
+            ctx.beginPath();
+            ctx.moveTo(25, -10);
+            ctx.lineTo(38, -18);
+            ctx.lineTo(42, -12);
+            ctx.lineTo(28, -5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#2a1a2a';
+            ctx.stroke();
+
+            // Head - more angular and fierce
+            ctx.fillStyle = '#5a3a4a';
+            ctx.beginPath();
+            ctx.moveTo(42, -20);
+            ctx.lineTo(55, -22);
+            ctx.lineTo(62, -18);
+            ctx.lineTo(65, -10);
+            ctx.lineTo(62, -5);
+            ctx.lineTo(48, -8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#2a1a2a';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Snout - pointed and dragon-like
+            ctx.fillStyle = '#5a3a4a';
+            ctx.beginPath();
+            ctx.moveTo(62, -18);
+            ctx.lineTo(72, -16);
+            ctx.lineTo(75, -12);
+            ctx.lineTo(72, -10);
+            ctx.lineTo(62, -10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Horns
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, -23);
+            ctx.lineTo(45, -32);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(58, -24);
+            ctx.lineTo(62, -34);
+            ctx.stroke();
+
+            // Eyes - glowing red
+            ctx.fillStyle = '#ff3333';
+            ctx.beginPath();
+            ctx.arc(58, -16, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(57, -15, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Fire breath glow
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.4)';
+            ctx.beginPath();
+            ctx.arc(72, -12, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wings - angular and membranous like UO style
+            const wingY = -12 + Math.sin(wingFlap) * 6;
+            const wingX = Math.cos(wingFlap) * 8;
+            
+            // Left wing
+            ctx.fillStyle = 'rgba(58, 30, 50, 0.9)';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-15 + wingX, wingY - 18);
+            ctx.lineTo(-32 + wingX, wingY - 12);
+            ctx.lineTo(-28, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Right wing
+            ctx.fillStyle = 'rgba(58, 30, 50, 0.9)';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(15 - wingX, wingY - 18);
+            ctx.lineTo(32 - wingX, wingY - 12);
+            ctx.lineTo(28, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Tail
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-25, 5);
+            ctx.quadraticCurveTo(-35, 8, -40, 15);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Particle effects
+        class Particle {
+            constructor(x, y, vx, vy, life) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.life = life;
+                this.maxLife = life;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // gravity
+                this.life--;
+            }
+
+            draw(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.fillStyle = `rgba(240, 208, 96, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createExplosion(x, y, count = 30, isVictory = false) {
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const speed = 4 + Math.random() * 3;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed - 2;
+                particles.push(new Particle(x, y, vx, vy, 40 + Math.random() * 20));
+            }
+        }
+
+        // Game Loop
+        let animationFrameId;
+        let gameLogicInterval = null;
+
+        function multToProgress(m) {
+            m = Math.max(0.0, m);
+            if (m <= 1)  return 0.10 * m;
+            if (m <= 2)  return 0.10 + 0.20 * (m - 1);
+            if (m <= 4)  return 0.30 + 0.30 * (m - 2) / (4 - 2);
+            if (m <= 8)  return 0.60 + 0.15 * (m - 4) / (8 - 4);
+            return Math.min(0.75 + 0.25 * (m - 8) / (32 - 8), 1.0);
+        }
+
+        function tickGameLogic() {
+            if (!gameState.isRunning || gameState.crashed) return;
+            const elapsed = Date.now() - gameState.gameStartTime;
+            // Starts at 1.00x, action zone 1-2x (6s), accelerates after
+            let _mult;
+            if (elapsed < 6000) {
+                _mult = 1 + (elapsed / 6000) * 1;            // 1x -> 2x over 6s
+            } else if (elapsed < 10000) {
+                _mult = 2 + ((elapsed - 6000) / 4000) * 2;  // 2x -> 4x over 4s
+            } else if (elapsed < 13000) {
+                _mult = 4 + ((elapsed - 10000) / 3000) * 4; // 4x -> 8x over 3s
+            } else if (elapsed < 17000) {
+                _mult = 8 + ((elapsed - 13000) / 4000) * 24; // 8x -> 32x over 4s
+            } else {
+                _mult = 32 + ((elapsed - 17000) / 1000) * 10; // 32x+ fast
+            }
+            gameState.multiplier = _mult;
+            updateUI();
+
+            // Cap at 50x if player has a bet -- let dragon fly free if no bet
+            const _activeBet = gameState.currentBet > 0;
+            const _effectiveCrash = (_activeBet && gameState.crashPoint > 50) ? 50 : gameState.crashPoint;
+
+            if (gameState.multiplier >= _effectiveCrash) {
+                const _cp = multToProgress(_effectiveCrash);
+                const cx = canvas.width * 0.08 + (canvas.width * 0.88 - canvas.width * 0.08) * _cp;
+                const cy = canvas.height * 0.85 - (canvas.height * 0.85 - canvas.height * 0.08) * _cp;
+                gameState.crashed = true;
+                gameState.crashPoint = _effectiveCrash; // update so crash anim uses right position
+                stopFlying();
+                playHarpoon();
+                startCrashAnimation(cx, cy);
+                handleCrash();
+            }
+        }
+
+        function startGameLogicTick() {
+            if (gameLogicInterval) clearInterval(gameLogicInterval);
+            gameLogicInterval = setInterval(tickGameLogic, 50);
+        }
+        function stopGameLogicTick() {
+            if (gameLogicInterval) clearInterval(gameLogicInterval);
+            gameLogicInterval = null;
+        }
+        let lastTickTime = 0;
+
+        // Preload background image
+        const bgImage = new Image();
+        bgImage.src = './crash_bg.jpg';
+
+        // Sounds
+        const sndFlying = new Audio('./sound_flying.mp3');
+        sndFlying.loop = true;
+        sndFlying.volume = 0.6;
+        sndFlying.playbackRate = 1.6;
+        const sndHarpoon = new Audio('./sound_harpoon.mp3');
+        sndHarpoon.volume = 1.0;
+        const sndDeath = new Audio('./sound_death.mp3');
+        sndDeath.volume = 1.0;
+
+        function playFlying() {
+            sndFlying.currentTime = 0;
+            sndFlying.play().catch(() => {});
+        }
+        function stopFlying() {
+            sndFlying.pause();
+            sndFlying.currentTime = 0;
+        }
+        function playHarpoon() {
+            sndHarpoon.currentTime = 0;
+            sndHarpoon.play().catch(() => {});
+        }
+        function playDeath() {
+            sndDeath.currentTime = 0;
+            sndDeath.play().catch(() => {});
+        }
+
+        // Dead dragon image
+        const deadDragonImg = new Image();
+        deadDragonImg.src = './dragon_dead.png';
+
+        const platformImg = new Image();
+        platformImg.src = './harpoon_platform.png?v=' + Date.now();
+        const boltImg = new Image();
+        boltImg.src = './harpoon_bolt.png';
+
+        // Crash animation state
+        let crashAnim = null;
+        let frozenLineX = null; // frozen crash line endpoint when dragon is hit
+        let frozenLineY = null;
+
+        function startCrashAnimation(tx, ty) {
+            frozenLineX = tx;
+            frozenLineY = ty;
+            window._boltFired = true;
+            window._boltFireFromX = window._barrelTipWorldX;
+            window._boltFireFromY = window._barrelTipWorldY;
+            const _elapsed = Date.now() - gameState.gameStartTime;
+            const _tp = Math.min(_elapsed / 12000, 1.0);
+            const _fz = Math.max(1.0, 2.5 - (_tp * 1.5));
+            const gx = window._wheelX || canvas.width * 0.82;
+            const gy = window._wheelY || canvas.height * 0.35;
+            const fromX = window._barrelTipWorldX || gx;
+            const fromY = window._barrelTipWorldY || gy;
+            crashAnim = {
+                frozenZoom: _fz,
+                phase: 'harpoon',
+                startTime: Date.now(),
+                fromX: fromX,
+                fromY: fromY,
+                targetX: tx,
+                targetY: ty,
+                deadX: tx,
+                deadY: ty,
+                deadVY: 0,
+                deadAlpha: 1.0
+            };
+        }
+
+        function drawCrashAnimation() {
+            if (!crashAnim) return;
+            const now = Date.now();
+            const dt = now - crashAnim.startTime;
+
+            if (crashAnim.phase === 'harpoon') {
+                const HARPOON_MS = 400;
+                const t = Math.min(dt / HARPOON_MS, 1);
+                const hx = crashAnim.fromX + (crashAnim.targetX - crashAnim.fromX) * t;
+                const hy = crashAnim.fromY + (crashAnim.targetY - crashAnim.fromY) * t;
+
+                // Draw rope/tether from gun pivot to flying bolt
+                ctx.save();
+                ctx.strokeStyle = 'rgba(180,140,80,0.7)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 3]);
+                ctx.beginPath();
+                ctx.moveTo(crashAnim.fromX, crashAnim.fromY);
+                ctx.lineTo(hx, hy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+
+                // Draw bolt flying toward dragon
+                if (boltImg.complete && boltImg.naturalWidth > 0) {
+                    const tipAngle = Math.atan2(crashAnim.targetY - crashAnim.fromY, crashAnim.targetX - crashAnim.fromX);
+                    const bfw = Math.round(canvas.width * (window._boltScale || 0.11));
+                    const bfh = Math.round(bfw * 215 / 421);
+                    ctx.save();
+                    ctx.translate(hx, hy);
+                    ctx.rotate(tipAngle + Math.PI);
+                    ctx.drawImage(boltImg, -bfw * 0.92, -bfh / 2, bfw, bfh);
+                    ctx.restore();
+                }
+
+                if (t >= 1) {
+                    crashAnim.phase = 'falling';
+                    crashAnim.startTime = Date.now();
+                    crashAnim.deadVY = -0.5;
+                    // playDeath(); // disabled
+                }
+
+            } else if (crashAnim.phase === 'falling') {
+                // Dead dragon falls slowly nose-first
+                crashAnim.deadVY += 0.1;
+                crashAnim.deadY += crashAnim.deadVY;
+                crashAnim.deadX += 0.3;
+
+                const w = 300;
+                const h = Math.round(300 * 780 / 1365);
+
+                ctx.save();
+                ctx.globalAlpha = crashAnim.deadAlpha;
+                ctx.translate(crashAnim.deadX, crashAnim.deadY);
+                ctx.rotate(Math.PI / 4);
+                ctx.drawImage(deadDragonImg, -w/2, -h/2, w, h);
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+
+                if (crashAnim.deadY > canvas.height * 0.75) {
+                    crashAnim.deadAlpha = Math.max(0, crashAnim.deadAlpha - 0.02);
+                    if (crashAnim.deadAlpha <= 0) { crashAnim = null; }
+                }
+            }
+
+            // Multiplier box at hit point -- shown during both phases
+            if (frozenLineX !== null) {
+                const label = gameState.multiplier.toFixed(2) + 'x';
+                const bx = frozenLineX;
+                const by = frozenLineY - 60;
+                const bw = 160;
+                const bh = 52;
+                ctx.save();
+                ctx.fillStyle = 'rgba(20, 12, 4, 0.82)';
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.roundRect(bx - bw/2, by - bh/2, bw, bh, 8);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#f0d060';
+                ctx.font = 'bold 30px Georgia, serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.9)';
+                ctx.shadowBlur = 6;
+                ctx.fillText(label, bx, by);
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+        }
+
+
+        function drawPlatformAndBolt(aimDragonX, aimDragonY) {
+            if (platformImg.complete && platformImg.naturalWidth > 0) {
+                const ph = Math.round(canvas.height * (window._platH || 0.60));
+                const pw = Math.round(ph * 500 / 1050);
+                const px = canvas.width * (window._platX || 0.82) - pw / 2;
+                const py = canvas.height * (window._platY || 1.00) - ph;
+                ctx.drawImage(platformImg, px, py, pw, ph);
+                window._wheelX = px + pw * (window._wheelPctX || 0.50);
+                window._wheelY = py + ph * (window._wheelPctY || 0.28);
+
+            }
+            if (boltImg.complete && boltImg.naturalWidth > 0) {
+                const bw = Math.round(canvas.width * (window._boltScale || 0.20));
+                const bh = Math.round(bw * 215 / 421);
+                const wx = window._wheelX || canvas.width * 0.82;
+                const wy = window._wheelY || canvas.height * 0.35;
+                const angle = Math.atan2(aimDragonY - wy, aimDragonX - wx) + Math.PI;
+                ctx.save();
+                ctx.translate(wx, wy);
+                ctx.rotate(angle);
+                ctx.drawImage(boltImg, -bw * 0.92, -bh / 2, bw, bh);
+                ctx.restore();
+                window._barrelTipWorldX = wx + Math.cos(angle - Math.PI) * bw * 0.87;
+                window._barrelTipWorldY = wy + Math.sin(angle - Math.PI) * bw * 0.87;
+            }
+        }
+
+        function gameLoop() {
+            // Dark base
+            ctx.fillStyle = '#1a1208';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid removed (bg drawn after progress is calculated below)
+
+            // Draw dynamic Y-axis labels based on current visible range
+            ctx.fillStyle = '#9a8070';
+            ctx.font = 'bold 12px Georgia';
+            ctx.textAlign = 'right';
+            
+            // Calculate the multiplier range visible on screen
+            const maxVisibleMultiplier = Math.max(1, gameState.multiplier);
+            const minVisibleMultiplier = 1;
+            const multiplierRange = maxVisibleMultiplier - minVisibleMultiplier;
+            
+            // Draw labels - scale them based on current multiplier
+            const labelCount = 6;
+            for (let i = 0; i <= labelCount; i++) {
+                const normalizedY = i / labelCount; // 0 at top, 1 at bottom
+                const multiplierAtY = maxVisibleMultiplier - (normalizedY * multiplierRange);
+                
+                // Map multiplier to canvas Y position
+                // Top of canvas shows highest multiplier, bottom shows 1x
+                const y = canvas.height * 0.25 - (i / labelCount) * (canvas.height * 0.6);
+                
+                if (multiplierAtY >= 1) {
+                    ctx.fillText(multiplierAtY.toFixed(1) + 'x', canvas.width - 10, y + 4);
+                }
+            }
+
+            if (!gameState.isRunning && !crashAnim) {
+                // Draw background even in waiting state
+                ctx.fillStyle = '#1a1208';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (bgImage.complete && bgImage.naturalWidth > 0) {
+                    const dbgScale = window._bgDebugScale || 1;
+                    const srcW = bgImage.naturalWidth / dbgScale;
+                    const srcH = bgImage.naturalHeight / dbgScale;
+                    const srcX = Math.max(0, Math.min(bgImage.naturalWidth - srcW, (bgImage.naturalWidth - srcW) * (window._bgPanX || 0.30)));
+                    const srcY = Math.max(0, Math.min(bgImage.naturalHeight - srcH, (bgImage.naturalHeight - srcH) * (window._bgPanY || 0.85)));
+                    ctx.globalAlpha = 0.55;
+                    ctx.drawImage(bgImage, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1.0;
+                }
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.4)';
+                ctx.font = 'bold 28px Georgia';
+                ctx.textAlign = 'center';
+                ctx.fillText('AWAITING ROUND...', canvas.width / 2, canvas.height / 2);
+                drawPlatformAndBolt(canvas.width * 0.1, canvas.height * 0.1);
+                animationFrameId = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // Keep rendering crash animation even after round ends
+            if (!gameState.isRunning && crashAnim) {
+                ctx.fillStyle = '#1a1208';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (bgImage.complete && bgImage.naturalWidth > 0) {
+                    const dbgScale = window._bgDebugScale || 1;
+                    const srcW = bgImage.naturalWidth / dbgScale;
+                    const srcH = bgImage.naturalHeight / dbgScale;
+                    const srcX = Math.max(0, Math.min(bgImage.naturalWidth - srcW, (bgImage.naturalWidth - srcW) * (window._bgPanX || 0.30)));
+                    const srcY = Math.max(0, Math.min(bgImage.naturalHeight - srcH, (bgImage.naturalHeight - srcH) * (window._bgPanY || 0.85)));
+                    ctx.globalAlpha = 0.55;
+                    ctx.drawImage(bgImage, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1.0;
+                }
+                drawCrashAnimation();
+                animationFrameId = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // Multiplier is updated by setInterval (tab-safe), just read it here
+            const elapsed = Date.now() - gameState.gameStartTime;
+
+            // Dragon always flies at the same fixed speed regardless of crash point
+            // Players can NEVER predict crash from dragon speed
+            const FLY_DURATION = 12000; // ms to reach top-right corner (always 12 seconds)
+            const timeProgress = Math.min(elapsed / FLY_DURATION, 1.0);
+
+            // Smooth ease: slow start, steady middle, gentle ease near top
+            const ease = timeProgress < 0.5
+                ? 2 * timeProgress * timeProgress
+                : 1 - Math.pow(-2 * timeProgress + 2, 2) / 2;
+
+            // Dragon path: custom piecewise -- 2x=30%, 4x=60%, 8x=75%, 32x+=100%
+            const startX = canvas.width * 0.05;
+            const startY = canvas.height * 0.92;
+            const endX   = canvas.width * 0.88;
+            const endY   = canvas.height * 0.08;
+
+            // multToProgress moved to top-level scope
+            const _logProgress = multToProgress(gameState.multiplier);
+            const dragonX = startX + (endX - startX) * _logProgress;
+            const dragonY = startY - (startY - endY) * _logProgress;
+
+            // Crash is triggered by setInterval tick (tab-safe), not render loop
+
+            // Progress for curve drawing (same as dragon position)
+            const progress = ease;
+
+            // Background: zoom out continuously driven by real time, not multiplier
+            // Starts 2.5x zoomed in, keeps pulling back steadily
+            // Freeze zoom when dragon is hit
+            const bgZoom = (gameState.crashed
+                ? (crashAnim ? crashAnim.frozenZoom || 1.0 : 1.0)
+                : Math.max(1.0, 2.5 - (_logProgress * 1.5))) * (window._bgDebugScale || 1.0);
+            if (bgImage.complete && bgImage.naturalWidth > 0) {
+                const srcW = bgImage.naturalWidth / bgZoom;
+                const srcH = bgImage.naturalHeight / bgZoom;
+                const srcX = Math.max(0, Math.min(bgImage.naturalWidth - srcW, (bgImage.naturalWidth - srcW) * (window._bgPanX || 0.30)));
+                const srcY = Math.max(0, Math.min(bgImage.naturalHeight - srcH, (bgImage.naturalHeight - srcH) * (window._bgPanY || 0.85)));
+                ctx.globalAlpha = 0.55;
+                ctx.drawImage(bgImage, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Dragon position: follows exponential curve path
+
+
+            // Line: frozen at crash point when hit, otherwise follows dragon
+            const lineStartX = canvas.width * 0.05;
+            const lineStartY = canvas.height * 0.92;
+            const lineEndX = (gameState.crashed && frozenLineX !== null) ? frozenLineX : dragonX;
+            const lineEndY = (gameState.crashed && frozenLineY !== null) ? frozenLineY : dragonY;
+            ctx.strokeStyle = '#f0d060';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = 'rgba(255, 220, 80, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(lineStartX, lineStartY);
+            ctx.lineTo(lineEndX, lineEndY);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Trail particles behind dragon
+            trail = trail.filter(p => { p.life--; return p.life > 0; });
+            trail.forEach(p => {
+                const alpha = p.life / 30;
+                ctx.fillStyle = `rgba(255, 160, 40, ${alpha * 0.8})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            if (gameState.isRunning && !gameState.crashed) {
+                trail.push({ x: dragonX - 25, y: dragonY + 15, life: 30 });
+            }
+
+            // Draw dragon at current position
+            const wingFlap = Date.now() / 200;
+            if (!gameState.crashed) {
+                // Alive and flying
+                drawDragon(dragonX, dragonY, 1.2, wingFlap);
+            } else if (crashAnim && crashAnim.phase === 'harpoon') {
+                // Harpoon in flight -- keep animated dragon visible until impact
+                drawDragon(dragonX, dragonY, 1.2, wingFlap);
+            }
+
+
+            // Crash animation (harpoon + falling dead dragon)
+            drawCrashAnimation();
+
+            // Draw platform + bolt
+            const _aimX = (gameState.crashed && frozenLineX) ? frozenLineX : dragonX;
+            const _aimY = (gameState.crashed && frozenLineY) ? frozenLineY : dragonY;
+            drawPlatformAndBolt(_aimX, _aimY);
+
+            // Draw particles
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
+            });
+
+            // Screen flash on crash
+            if (gameState.crashed && elapsed - (gameState.gameStartTime - Date.now() + elapsed) < 200) {
+                ctx.fillStyle = 'rgba(139, 26, 26, 0.4)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Betting flow
+        let bettingInterval = null;
+        
+        function startBetting() {
+            gameState.isBetting = true;
+            gameState.bettingCountdown = gameState.bettingPhaseTime;
+            gameState.currentBet = 0;
+            gameState.autoCashoutTarget = null;
+            document.getElementById('betInput').value = '';
+            document.getElementById('autoCashoutInput').value = '';
+            updateUI();
+
+            if (bettingInterval) clearInterval(bettingInterval);
+            
+            bettingInterval = setInterval(() => {
+                gameState.bettingCountdown--;
+                updateUI();
+
+                if (gameState.bettingCountdown <= 0) {
+                    clearInterval(bettingInterval);
+                    bettingInterval = null;
+                    startRound();
+                }
+            }, 1000);
+        }
+
+        function startRound() {
+            if (gameState.currentBet <= 0) {
+                document.getElementById('statusText').textContent = 'PLACE A BET TO CONTINUE';
+                document.getElementById('statusText').className = 'status-text status-betting';
+                setTimeout(startBetting, 2000);
+                return;
+            }
+
+            gameState.isBetting = false;
+            gameState.isRunning = true;
+            gameState.crashed = false;
+            gameState.multiplier = 1.0;
+            gameState.cashedOut = false;
+            gameState.cashedOut = false;
+            const _btnReset = document.getElementById('cashOutBtn'); if (_btnReset) { _btnReset.disabled = false; _btnReset.style.opacity = '1'; _btnReset.style.cursor = 'pointer'; }
+            gameState.seed = generateSeed();
+            gameState.crashPoint = crashPointFromSeed(gameState.seed);
+            gameState.gameStartTime = Date.now();
+            playFlying();
+            startGameLogicTick();
+            gameState.winnings = 0;
+            crashAnim = null;  // Clear crash animation for new round
+            window._boltFired = false;
+            frozenLineX = null;
+            frozenLineY = null;
+
+            trail = [];
+            particles = [];
+
+            updateUI();
+            const _sd = document.getElementById('seedDisplay'); if (_sd) _sd.textContent = gameState.seed;
+        }
+
+        function addBet(amount) {
+            const input = document.getElementById('betInput');
+            const current = parseFloat(input.value) || 0;
+            input.value = (current + amount).toFixed(0);
+        }
+
+        function cashOut() {
+            if (!gameState.isRunning || gameState.crashed || gameState.currentBet <= 0) return;
+            if (gameState.cashedOut) return;
+            const payout = gameState.currentBet * gameState.multiplier;
+            gameState.balance += payout;
+            gameState.cashedOut = true;
+            gameState.currentBet = 0; // hide action bar
+            // Hide action bar
+            const _bar = document.getElementById('gameActionBar'); if (_bar) _bar.style.display = 'none';
+            const _btn = document.getElementById('cashOutBtn'); if (_btn) { _btn.disabled = true; _btn.style.opacity = '0.4'; _btn.style.cursor = 'not-allowed'; }
+            // Show win message
+            const msg = document.getElementById('gameMessage');
+            msg.textContent = 'THOU HAST PREVAILED! +' + payout.toFixed(2);
+            msg.className = 'game-message message-win show';
+            setTimeout(() => msg.classList.remove('show'), 2500);
+            // Game keeps running -- dragon flies on until real crash point
+            updateUI();
+        }
+
+        function handleCrash() {
+            stopGameLogicTick();
+            // Keep isRunning = true so game loop keeps rendering crash animation
+            // gameState.crashed is already true
+
+            const _bar = document.getElementById('gameActionBar'); if (_bar) _bar.style.display = 'none';
+            const _btn = document.getElementById('cashOutBtn'); if (_btn) { _btn.disabled = true; _btn.style.opacity = '0.4'; _btn.style.cursor = 'not-allowed'; }
+            // Show crash message
+            const msg = document.getElementById('gameMessage');
+            msg.textContent = 'THOU HAST PERISHED';
+            msg.className = 'game-message message-crash show';
+            setTimeout(() => msg.classList.remove('show'), 2000);
+
+            // Add to history
+            const color = gameState.multiplier > 2 ? 'high' : (gameState.multiplier > 1.5 ? 'mid' : 'low');
+            gameState.history.unshift({ mult: gameState.multiplier.toFixed(2), color });
+            if (gameState.history.length > 10) gameState.history.pop();
+
+            // Player actions
+            addPlayerAction(getRandomPlayerName(), gameState.multiplier);
+
+            const crashMsg = document.getElementById('gameMessage');
+            if (crashMsg) {
+                crashMsg.innerHTML = 'CRASHED<div style="font-size:34px;margin-top:10px;color:#ffd6c8;text-align:center;width:100%;">at ' + gameState.crashPoint.toFixed(2) + 'x</div>';
+                crashMsg.className = 'game-message message-lose show';
+            }
+            const flash = document.getElementById('crashFlash');
+            if (flash) {
+                flash.classList.remove('show');
+                void flash.offsetWidth;
+                flash.classList.add('show');
+            }
+            const gameArea = document.getElementById('gameArea');
+            if (gameArea) {
+                gameArea.classList.remove('screen-shake');
+                void gameArea.offsetWidth;
+                gameArea.classList.add('screen-shake');
+                setTimeout(() => gameArea.classList.remove('screen-shake'), 650);
+            }
+
+            updateUI();
+
+            // After crash animation plays out, stop loop and start next round
+            setTimeout(() => {
+                gameState.isRunning = false;
+                crashAnim = null;
+                startBetting();
+            }, 3500);
+        }
+
+        function playCashoutSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!window._cashoutAudioCtx) window._cashoutAudioCtx = new AudioCtx();
+                const ctx = window._cashoutAudioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const now = ctx.currentTime;
+                const master = ctx.createGain();
+                master.gain.setValueAtTime(0.0001, now);
+                master.gain.exponentialRampToValueAtTime(0.42, now + 0.015);
+                master.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+                master.connect(ctx.destination);
+
+                const coinTimes = [0, 0.07, 0.14, 0.23, 0.34];
+                const coinFreqs = [1800, 2100, 2400, 2200, 2600];
+                coinTimes.forEach((t, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(coinFreqs[i], now + t);
+                    osc.frequency.exponentialRampToValueAtTime(coinFreqs[i] * 0.65, now + t + 0.08);
+                    gain.gain.setValueAtTime(0.0001, now + t);
+                    gain.gain.exponentialRampToValueAtTime(0.16, now + t + 0.008);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.09);
+                    osc.connect(gain);
+                    gain.connect(master);
+                    osc.start(now + t);
+                    osc.stop(now + t + 0.1);
+                });
+
+                const fanfare = [784, 1046.5, 1318.5];
+                fanfare.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = i === 2 ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + 0.18 + i * 0.11);
+                    gain.gain.setValueAtTime(0.0001, now + 0.18 + i * 0.11);
+                    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.2 + i * 0.11);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.62 + i * 0.11);
+                    osc.connect(gain);
+                    gain.connect(master);
+                    osc.start(now + 0.18 + i * 0.11);
+                    osc.stop(now + 0.7 + i * 0.11);
+                });
+            } catch (e) {
+                console.debug('cashout sound failed', e);
+            }
+        }
+
+        function cashout() {
+            if (!gameState.isRunning || gameState.crashed || gameState.cashedOut) return;
+            const activeBet = gameState.roundBet || gameState.currentBet;
+            if (activeBet <= 0) return;
+
+            const winnings = activeBet * gameState.multiplier;
+            gameState.balance += winnings;
+            gameState.winnings = winnings;
+            gameState.currentBet = 0;
+            gameState.cashedOut = true;
+
+            const msg = document.getElementById('gameMessage');
+            msg.innerHTML = 'VICTORY!<div style="font-size:34px;margin-top:10px;color:#7CFC98;text-align:center;width:100%;">+' + Math.round(winnings).toString() + ' coins</div>';
+            msg.className = 'game-message message-victory show';
+
+            createExplosion(
+                canvas.width / 2,
+                canvas.height / 2,
+                50,
+                true
+            );
+            playCashoutSound();
+
+            const _btn = document.getElementById('cashOutBtn'); if (_btn) { _btn.classList.remove('cashout-button-win'); void _btn.offsetWidth; _btn.classList.add('cashout-button-win'); _btn.disabled = true; _btn.style.opacity = '0.4'; _btn.style.cursor = 'not-allowed'; }
+            const _hiddenBtn = document.getElementById('cashoutBtn'); if (_hiddenBtn) _hiddenBtn.disabled = true;
+
+            addPlayerAction('You', gameState.multiplier, winnings, true);
+            updateUI();
+        }
+
+        function setBet(amount) {
+            if (!gameState.isBetting || gameState.isRunning) return;
+            
+            if (amount === 'MAX') {
+                gameState.currentBet = gameState.balance;
+            } else {
+                gameState.currentBet = amount;
+            }
+
+            document.getElementById('betInput').value = gameState.currentBet;
+            updateUI();
+        }
+
+
+        function setBetAmount(amount) {
+            const betInput = document.getElementById('betInput');
+            if (!betInput) return;
+            const current = parseFloat(betInput.value || '0') || 0;
+            betInput.value = Math.round((current + amount) * 100) / 100;
+        }
+        function confirmBet() {
+            if (!gameState.isBetting || gameState.isRunning) return;
+
+            const input = document.getElementById('betInput').value;
+            const bet = parseFloat(input);
+
+            if (isNaN(bet) || bet <= 0) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            if (bet > gameState.balance) {
+                alert('Insufficient balance');
+                return;
+            }
+
+            gameState.currentBet = bet;
+            gameState.roundBet = bet;
+            gameState.balance -= bet;
+
+            const autoCashout = document.getElementById('autoCashoutInput').value;
+            if (autoCashout) {
+                gameState.autoCashoutTarget = parseFloat(autoCashout);
+            }
+
+            if (bettingInterval) clearInterval(bettingInterval);
+            bettingInterval = null;
+            
+            updateUI();
+            startRound();
+        }
+
+        function updateUI() {
+            const bar = document.getElementById('gameActionBar');
+            if (bar) {
+                const activeBet = gameState.isRunning ? (gameState.roundBet || gameState.currentBet) : gameState.currentBet;
+                const show = gameState.isRunning && !gameState.crashed && activeBet > 0;
+                bar.style.display = show ? 'flex' : 'none';
+                if (show) {
+                    const multEl = document.getElementById('payoutMult');
+                    const amtEl = document.getElementById('payoutAmt');
+                    if (gameState.cashedOut) {
+                        if (multEl) { multEl.textContent = gameState.multiplier.toFixed(2) + 'x'; multEl.style.color = '#fff'; }
+                        if (amtEl) { amtEl.textContent = '+ ' + Math.round(gameState.winnings).toString() + ' coins'; amtEl.style.color = '#4ade80'; }
+                    } else {
+                        const m = gameState.multiplier;
+                        const payout = activeBet * m;
+                        if (multEl) { multEl.textContent = m.toFixed(2) + 'x'; multEl.style.color = '#fff'; }
+                        if (amtEl) { amtEl.textContent = '+ ' + Math.round(payout).toString() + ' coins'; amtEl.style.color = '#4ade80'; }
+                    }
+                }
+            }
+            const msg = document.getElementById('gameMessage');
+            if (msg && gameState.isRunning && gameState.cashedOut && !gameState.crashed) {
+                msg.innerHTML = 'VICTORY!<div style="font-size:34px;margin-top:10px;color:#7CFC98;text-align:center;width:100%;">+' + Math.round(gameState.winnings).toString() + ' coins</div>';
+                msg.className = 'game-message message-victory show';
+            }
+            document.getElementById('balanceValue').textContent = Math.round(gameState.balance).toString();
+            document.getElementById('balanceValue').style.color = '#ffd700';
+            const betDisplay = gameState.isRunning ? gameState.roundBet : gameState.currentBet;
+            document.getElementById('currentBetValue').textContent = Math.round(betDisplay).toString();
+            document.getElementById('currentBetValue').style.color = '#ffffff';
+            const nextRoundEl = document.getElementById('nextRoundCountdown');
+            const topBarBlock = document.getElementById('topBarBlock');
+            if (nextRoundEl && topBarBlock) {
+                if (gameState.isBetting) {
+                    topBarBlock.style.display = 'flex';
+                    nextRoundEl.textContent = 'Next round in ' + Math.ceil(gameState.bettingCountdown) + 's';
+                } else if (gameState.isRunning && !gameState.crashed) {
+                    topBarBlock.style.display = 'flex';
+                    nextRoundEl.textContent = '';
+                } else if (gameState.crashed) {
+                    topBarBlock.style.display = 'flex';
+                    nextRoundEl.textContent = 'Next round soon';
+                } else {
+                    topBarBlock.style.display = 'flex';
+                    nextRoundEl.textContent = 'Next round in 8s';
+                }
+            }
+            document.getElementById('winningsValue').textContent = gameState.winnings.toFixed(2);
+
+            const mult = gameState.multiplier.toFixed(2);
+            const multiplierEl = document.getElementById('multiplierValue');
+            multiplierEl.textContent = mult + 'x';
+            if (gameState.isRunning) {
+                multiplierEl.classList.add('pulse');
+                setTimeout(() => multiplierEl.classList.remove('pulse'), 300);
+            }
+
+            // Status text
+            const statusEl = document.getElementById('statusText');
+            if (gameState.isBetting) {
+                statusEl.textContent = 'BETTING PHASE';
+                statusEl.className = 'status-text status-betting';
+            } else if (gameState.isRunning) {
+                statusEl.textContent = 'ROUND ACTIVE';
+                statusEl.className = 'status-text status-running';
+            } else {
+                statusEl.textContent = 'WAITING FOR ROUND...';
+                statusEl.className = 'status-text status-betting';
+            }
+
+            // Countdown
+            const countdownEl = document.getElementById('countdownText');
+            if (gameState.isBetting) {
+                countdownEl.textContent = gameState.bettingCountdown.toString();
+            } else {
+                countdownEl.textContent = '';
+            }
+
+            // Cashout button
+            const cashoutBtn = document.getElementById('cashoutBtn');
+            if (gameState.isRunning && !gameState.crashed && gameState.multiplier > 1.0) {
+                cashoutBtn.disabled = false;
+                if (gameState.multiplier > 1.5) {
+                    cashoutBtn.classList.add('pulse-urgent');
+                } else {
+                    cashoutBtn.classList.remove('pulse-urgent');
+                }
+            } else {
+                cashoutBtn.disabled = true;
+                cashoutBtn.classList.remove('pulse-urgent');
+            }
+
+            // Auto cashout
+            if (gameState.isRunning && !gameState.crashed && gameState.autoCashoutTarget && gameState.multiplier >= gameState.autoCashoutTarget) {
+                cashout();
+                return;
+            }
+
+            // History
+            const historyEl = document.getElementById('historyContainer');
+            historyEl.innerHTML = gameState.history.map(h => 
+                `<div class="history-chip ${h.color}">${h.mult}</div>`
+            ).join('');
+
+            // Betting controls - only enable during betting phase
+            const bettingDisabled = !gameState.isBetting || gameState.isRunning;
+            const confirmBtn = document.getElementById('confirmBetBtn');
+            confirmBtn.disabled = bettingDisabled;
+            confirmBtn.style.display = bettingDisabled ? 'none' : 'block';
+            document.getElementById('betInput').disabled = bettingDisabled;
+            document.getElementById('autoCashoutInput').disabled = bettingDisabled;
+            
+            // Bet preset buttons
+            const betBtns = document.querySelectorAll('.bet-btn');
+            betBtns.forEach(btn => btn.disabled = bettingDisabled);
+        }
+
+        // Player feed simulation
+        const playerNames = [
+            'RiverQueen', 'ChipSaint', 'SlotGoblin', 'DiceDahlia', 'TiltedTom', 'HexHazel', 'LateNightLou', 'BonusBabe',
+            'NeonNina', 'BadBeatBen', 'LuckyMara', 'GrindModeJay', 'TurboTess', 'ScatterSam', 'RogueRiley', 'PayoutPete',
+            'CashoutKira', 'SpinDoctor', 'DegenerateDan', 'JinxJenny', 'VaultVera', 'MuckLuck', 'GhostChip', 'ReelRaven'
+        ];
+
+        function getRandomPlayerName() {
+            return playerNames[Math.floor(Math.random() * playerNames.length)];
+        }
+
+        function addPlayerAction(name, multiplier, fixedWinnings = null, highlight = false, forcedLoss = false) {
+            const feed = document.getElementById('playersFeed');
+            const action = document.createElement('div');
+
+            const isLoss = forcedLoss || (fixedWinnings === null && Math.random() < 0.16);
+            if (isLoss) {
+                action.className = 'player-action player-action-loss';
+                const lossBet = Math.floor(100 + Math.random() * 4900);
+                const lossText = Math.random() < 0.5 ? 'rekt' : 'missed cashout';
+                action.innerHTML = `<span class="name">${name}</span><span class="loss-text">${lossText}</span><span class="amount">-${lossBet}</span>`;
+            } else {
+                action.className = 'player-action' + (highlight ? ' cashout-win' : '');
+                let winnings;
+                if (fixedWinnings !== null) {
+                    winnings = Number(fixedWinnings).toFixed(0);
+                } else {
+                    const baseBet = [100, 250, 500, 750, 1000, 1500, 2500, 5000][Math.floor(Math.random() * 8)];
+                    const variance = 0.72 + Math.random() * 0.85;
+                    winnings = Math.max(50, Math.round(baseBet * multiplier * variance)).toString();
+                }
+                const multText = Number(multiplier).toFixed(2) + 'x';
+                action.innerHTML = `<span class="name">${name}</span><span class="mult">${multText}</span><span class="cashout-text">cashed out</span><span class="amount">+${winnings}</span>`;
+            }
+            feed.insertBefore(action, feed.firstChild);
+            if (feed.children.length > 15) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // Initialize
+        updateUI();
+        gameLoop();
+        
+        // Start first betting phase
+        setTimeout(startBetting, 500);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+
+        });
+    </script>
 
 <script>
-/* ── GLOBALS ── */
-let balance = 100000;
-let currentBet = 0;
-let selectedChip = null;
-let crashHistory = [];
-
-const PHASE = { BETTING: 0, FLYING: 1, CRASHED: 2 };
-let phase = PHASE.BETTING;
-let tick = 0;
-let multiplier = 1.0;
-let crashPoint = 1.0;
-let cashedOut = false;
-let cashoutMult = 0;
-let bettingTimer = 0;
-let betPlaced = false;
-
-/* ── DOM REFS ── */
-const canvas = document.getElementById('flight-canvas');
-const ctx = canvas.getContext('2d');
-const multOverlay = document.getElementById('mult-overlay');
-const resultOverlay = document.getElementById('result-overlay');
-const phaseLabel = document.getElementById('phase-label');
-const balanceEl = document.getElementById('balance');
-const betAmountEl = document.getElementById('bet-amount');
-const btnBet = document.getElementById('btn-bet');
-const btnCashout = document.getElementById('btn-cashout');
-const autoCashoutInput = document.getElementById('auto-cashout');
-const autoLabel = document.getElementById('auto-label');
-const historyEl = document.getElementById('history');
-const screenFlash = document.getElementById('screen-flash');
-
-/* ── AUDIO ── */
-const bgMusic = document.getElementById('bgMusic');
-bgMusic.volume = 0.45;
-let _muted = false;
-function toggleMute(){
-  _muted = !_muted;
-  bgMusic.muted = _muted;
-  document.getElementById('muteBtn').innerHTML = _muted ? '&#x1f507;' : '&#x1f50a;';
-}
-function startMusic(){ bgMusic.play().catch(()=>{}); }
-document.addEventListener('pointerdown', startMusic, {once:true});
-document.addEventListener('keydown', startMusic, {once:true});
-
-/* ── DRAGON SPRITES ── */
-const flyFrames = [];
-let crashImg = new Image();
-crashImg.src = 'sprites/dragon/fly/dragon_crash.png';
-for(let i = 0; i < 5; i++){
-  const img = new Image();
-  img.src = `sprites/dragon/fly/dragon_fly_0${i}.png`;
-  flyFrames.push(img);
-}
-let dragonFrame = 0;
-let dragonAnimTimer = 0;
-const DRAGON_ANIM_MS = 120;
-
-/* ── PARTICLES ── */
-let particles = [];
-function spawnParticles(count, type){
-  for(let i = 0; i < count; i++){
-    if(type === 'ember'){
-      particles.push({
-        x: Math.random() * 800,
-        y: 380 + Math.random() * 40,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -(0.3 + Math.random() * 0.6),
-        life: 200 + Math.random() * 300,
-        maxLife: 0,
-        size: 1.5 + Math.random() * 2.5,
-        color: Math.random() > 0.5 ? '#ffd700' : '#ff9900',
-        type: 'ember'
-      });
-      particles[particles.length-1].maxLife = particles[particles.length-1].life;
-    } else if(type === 'crash'){
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 4;
-      particles.push({
-        x: 400, y: 190,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 40 + Math.random() * 30,
-        maxLife: 0,
-        size: 2 + Math.random() * 3,
-        color: '#ff3333',
-        type: 'crash'
-      });
-      particles[particles.length-1].maxLife = particles[particles.length-1].life;
-    }
-  }
-}
-// Initial embers
-spawnParticles(40, 'ember');
-
-function updateParticles(dt){
-  const speedMult = multiplier > 5 ? 2.0 : 1.0;
-  for(let i = particles.length - 1; i >= 0; i--){
-    const p = particles[i];
-    p.x += p.vx * speedMult;
-    p.y += p.vy * speedMult;
-    p.life--;
-    if(p.life <= 0){
-      particles.splice(i, 1);
-      // Respawn embers
-      if(p.type === 'ember') spawnParticles(1, 'ember');
-    }
-  }
-  // Add more embers when multiplier > 5
-  if(phase === PHASE.FLYING && multiplier > 5 && particles.filter(p=>p.type==='ember').length < 70){
-    spawnParticles(2, 'ember');
-  }
-}
-
-function drawParticles(){
-  for(const p of particles){
-    const alpha = Math.min(1, p.life / (p.maxLife * 0.3));
-    ctx.globalAlpha = alpha * 0.7;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-
-/* ── BEZIER PATH ── */
-const PATH_START = {x: 80, y: 320};
-const PATH_CTRL = {x: 200, y: 50};
-const PATH_END = {x: 520, y: 80};
-
-function bezierPoint(t){
-  const u = 1 - t;
-  return {
-    x: u*u*PATH_START.x + 2*u*t*PATH_CTRL.x + t*t*PATH_END.x,
-    y: u*u*PATH_START.y + 2*u*t*PATH_CTRL.y + t*t*PATH_END.y
-  };
-}
-
-/* ── CRASH POINT GENERATION ── */
-function generateCrashPoint(){
-  // House edge 4%
-  let r = Math.random();
-  let cp = -1 / Math.log(r) * 0.96;
-  while(cp < 1.0){
-    r = Math.random();
-    cp = -1 / Math.log(r) * 0.96;
-  }
-  return cp;
-}
-
-/* ── CHIP SELECTION ── */
-function selectChip(val){
-  selectedChip = val;
-  document.querySelectorAll('.chip-btn').forEach(e => e.classList.remove('selected'));
-  const el = document.getElementById('chip-' + val);
-  if(el) el.classList.add('selected');
-  addToBet();
-}
-
-function addToBet(){
-  if(phase !== PHASE.BETTING || !selectedChip) return;
-  if(currentBet + selectedChip > balance) return;
-  currentBet += selectedChip;
-  updateBetDisplay();
-}
-
-function clearBet(){
-  if(phase !== PHASE.BETTING) return;
-  currentBet = 0;
-  selectedChip = null;
-  document.querySelectorAll('.chip-btn').forEach(e => e.classList.remove('selected'));
-  updateBetDisplay();
-}
-
-function updateBetDisplay(){
-  betAmountEl.textContent = currentBet.toLocaleString();
-}
-
-function updateBalanceDisplay(){
-  balanceEl.textContent = balance.toLocaleString();
-}
-
-/* ── BET / CASHOUT ── */
-function placeBet(){
-  if(phase !== PHASE.BETTING || currentBet <= 0) return;
-  betPlaced = true;
-  btnBet.disabled = true;
-  // Update auto label
-  const acVal = parseFloat(autoCashoutInput.value);
-  if(!isNaN(acVal) && acVal > 1){
-    autoLabel.textContent = `AUTO CASHOUT at ${acVal.toFixed(2)}x`;
-  } else {
-    autoLabel.textContent = '';
-  }
-}
-
-function cashOut(){
-  if(phase !== PHASE.FLYING || cashedOut || !betPlaced) return;
-  cashedOut = true;
-  cashoutMult = multiplier;
-  const winnings = Math.floor(currentBet * cashoutMult);
-  balance += winnings;
-  updateBalanceDisplay();
-  showResult(true, winnings - currentBet);
-  btnCashout.classList.remove('active');
-  btnCashout.disabled = true;
-}
-
-/* ── HISTORY ── */
-function addHistory(val){
-  crashHistory.unshift(val);
-  if(crashHistory.length > 10) crashHistory.pop();
-  renderHistory();
-}
-
-function renderHistory(){
-  historyEl.innerHTML = '';
-  for(const v of crashHistory){
-    const cls = v < 2 ? 'red' : v < 5 ? 'yellow' : 'green';
-    historyEl.innerHTML += `<span class="history-item ${cls}">${v.toFixed(2)}x</span>`;
-  }
-}
-
-/* ── RESULT OVERLAY ── */
-function showResult(win, amount){
-  resultOverlay.className = 'show ' + (win ? 'win' : 'lose');
-  if(win){
-    resultOverlay.textContent = `WIN: +${amount.toLocaleString()}g`;
-  } else {
-    resultOverlay.textContent = 'BUST';
-  }
-}
-
-function hideResult(){
-  resultOverlay.className = '';
-  resultOverlay.textContent = '';
-}
-
-/* ── DRAW FLIGHT PATH ── */
-function drawFlightPath(){
-  // Draw faint trail
-  ctx.strokeStyle = 'rgba(255,215,0,0.15)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(PATH_START.x, PATH_START.y);
-  ctx.quadraticCurveTo(PATH_CTRL.x, PATH_CTRL.y, PATH_END.x, PATH_END.y);
-  ctx.stroke();
-
-  // Draw traveled path (gold)
-  if(phase === PHASE.FLYING || phase === PHASE.CRASHED){
-    const t = Math.min(1, Math.max(0, (multiplier - 1) / 9));
-    ctx.strokeStyle = 'rgba(255,215,0,0.5)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(PATH_START.x, PATH_START.y);
-    // Draw path up to current t
-    const steps = Math.floor(t * 50);
-    for(let i = 1; i <= steps; i++){
-      const st = i / 50;
-      const pt = bezierPoint(st);
-      ctx.lineTo(pt.x, pt.y);
-    }
-    ctx.stroke();
-  }
-}
-
-/* ── DRAW DRAGON ── */
-let dragonShakeX = 0, dragonShakeY = 0, dragonFallY = 0;
-
-function drawDragon(){
-  let t, img;
-  if(phase === PHASE.BETTING){
-    t = 0;
-    img = flyFrames[0];
-  } else if(phase === PHASE.FLYING){
-    t = Math.min(1, Math.max(0, (multiplier - 1) / 9));
-    img = flyFrames[dragonFrame];
-  } else {
-    t = Math.min(1, Math.max(0, (crashPoint - 1) / 9));
-    img = crashImg;
-  }
-
-  const pos = bezierPoint(t);
-  const drawX = pos.x - 50 + dragonShakeX;
-  const drawY = pos.y - 40 + dragonShakeY + dragonFallY;
-
-  if(img && img.complete && img.naturalWidth > 0){
-    ctx.drawImage(img, drawX, drawY, 100, 80);
-  } else {
-    // Fallback rectangle
-    ctx.fillStyle = '#ffd700';
-    ctx.fillRect(drawX, drawY, 100, 80);
-  }
-}
-
-/* ── GAME LOOP ── */
-let lastTime = 0;
-let tickAccum = 0;
-let crashAnimTime = 0;
-
-function gameLoop(timestamp){
-  const dt = lastTime ? (timestamp - lastTime) : 16;
-  lastTime = timestamp;
-
-  // Dragon animation
-  dragonAnimTimer += dt;
-  if(dragonAnimTimer >= DRAGON_ANIM_MS){
-    dragonAnimTimer -= DRAGON_ANIM_MS;
-    if(phase === PHASE.FLYING){
-      dragonFrame = (dragonFrame + 1) % 5;
-    }
-  }
-
-  // Multiplier tick
-  if(phase === PHASE.FLYING){
-    tickAccum += dt;
-    while(tickAccum >= 100){
-      tickAccum -= 100;
-      tick++;
-      multiplier = Math.exp(0.00006 * tick);
-
-      // Check auto-cashout
-      if(betPlaced && !cashedOut){
-        const acVal = parseFloat(autoCashoutInput.value);
-        if(!isNaN(acVal) && acVal > 1 && multiplier >= acVal){
-          cashOut();
-        }
-      }
-
-      // Check crash
-      if(multiplier >= crashPoint){
-        triggerCrash();
-        break;
-      }
-    }
-    // Update multiplier display
-    if(phase === PHASE.FLYING){
-      multOverlay.textContent = multiplier.toFixed(2) + 'x';
-      btnCashout.textContent = `CASH OUT ${multiplier.toFixed(2)}x`;
-    }
-  }
-
-  // Crash animation
-  if(phase === PHASE.CRASHED){
-    crashAnimTime += dt;
-    if(crashAnimTime < 500){
-      dragonShakeX = (Math.random() - 0.5) * 10;
-      dragonShakeY = (Math.random() - 0.5) * 10;
-      dragonFallY = crashAnimTime * 0.15;
-    }
-    if(crashAnimTime > 300){
-      screenFlash.classList.remove('flash');
-    }
-  }
-
-  // Draw
-  ctx.clearRect(0, 0, 800, 380);
-  drawParticles();
-  updateParticles(dt);
-  drawFlightPath();
-  drawDragon();
-
-  requestAnimationFrame(gameLoop);
-}
-
-/* ── PHASE TRANSITIONS ── */
-function startBetting(){
-  phase = PHASE.BETTING;
-  tick = 0;
-  tickAccum = 0;
-  multiplier = 1.0;
-  cashedOut = false;
-  cashoutMult = 0;
-  betPlaced = false;
-  dragonShakeX = 0;
-  dragonShakeY = 0;
-  dragonFallY = 0;
-  crashAnimTime = 0;
-  dragonFrame = 0;
-
-  multOverlay.textContent = '1.00x';
-  multOverlay.classList.remove('crashed');
-  hideResult();
-  phaseLabel.textContent = 'PLACE YOUR BETS';
-  phaseLabel.style.opacity = '0.7';
-
-  btnBet.style.display = 'inline-block';
-  btnBet.disabled = false;
-  btnCashout.style.display = 'none';
-  btnCashout.classList.remove('active');
-
-  crashPoint = generateCrashPoint();
-
-  // Countdown
-  let countdown = 3;
-  phaseLabel.textContent = `STARTING IN ${countdown}...`;
-  const cdInterval = setInterval(() => {
-    countdown--;
-    if(countdown <= 0){
-      clearInterval(cdInterval);
-      startFlying();
-    } else {
-      phaseLabel.textContent = `STARTING IN ${countdown}...`;
-    }
-  }, 1000);
-}
-
-function startFlying(){
-  phase = PHASE.FLYING;
-  phaseLabel.textContent = '';
-  phaseLabel.style.opacity = '0';
-
-  btnBet.style.display = 'none';
-
-  if(betPlaced){
-    balance -= currentBet;
-    updateBalanceDisplay();
-    btnCashout.style.display = 'inline-block';
-    btnCashout.classList.add('active');
-    btnCashout.disabled = false;
-    btnCashout.textContent = 'CASH OUT 1.00x';
-  }
-}
-
-function triggerCrash(){
-  phase = PHASE.CRASHED;
-  multiplier = crashPoint;
-  crashAnimTime = 0;
-
-  multOverlay.textContent = crashPoint.toFixed(2) + 'x';
-  multOverlay.classList.add('crashed');
-  phaseLabel.textContent = 'CRASHED!';
-  phaseLabel.style.opacity = '0.7';
-
-  screenFlash.classList.add('flash');
-
-  btnCashout.classList.remove('active');
-  btnCashout.style.display = 'none';
-
-  // Crash particles
-  spawnParticles(30, 'crash');
-
-  // If player didn't cash out
-  if(betPlaced && !cashedOut){
-    showResult(false, 0);
-  }
-
-  addHistory(crashPoint);
-
-  // Reset bet for next round
-  setTimeout(() => {
-    currentBet = 0;
-    updateBetDisplay();
-    startBetting();
-  }, 3000);
-}
-
-/* ── KEYBOARD ── */
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Delete' || e.key === 'Backspace'){
-    if(document.activeElement === autoCashoutInput) return;
-    e.preventDefault();
-    clearBet();
-  }
-  if(e.key === ' ' || e.key === 'Enter'){
-    if(document.activeElement === autoCashoutInput) return;
-    e.preventDefault();
-    if(phase === PHASE.BETTING) placeBet();
-    else if(phase === PHASE.FLYING) cashOut();
-  }
-});
-
-/* ── INIT ── */
-updateBetDisplay();
-updateBalanceDisplay();
-startBetting();
-requestAnimationFrame(gameLoop);
+(function(){
+  const el = document.getElementById('confirmBetBtn');
+  if (!el) return;
+  el.style.top = '36%';
+  el.style.left = '8%';
+  el.style.width = '100%';
+  el.style.transform = 'scale(0.86)';
+  el.style.transformOrigin = 'top left';
+  el.style.fontSize = '17px';
+})();
 </script>
+
+<script>
+(function(){
+  const ids = ['towerDebugger','harpoonDebugger'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
+})();
+</script>
+
+<script>
+(function(){
+  const wrap = document.getElementById('betInputWrap');
+  const input = document.getElementById('betInput');
+  const cash = document.getElementById('autoCashoutInput');
+  if (!wrap || !input || !cash) return;
+  wrap.style.top = '24%';
+  wrap.style.left = '31.5%';
+  input.style.width = '130px';
+  input.style.fontSize = '14px';
+  cash.style.top = '52%';
+  cash.style.left = '8%';
+  cash.style.width = '84%';
+  cash.style.fontSize = '14px';
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>
