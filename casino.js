@@ -703,7 +703,7 @@ class CasinoScene extends Phaser.Scene {
     this.debugCopyBtn.setInteractive({ cursor: 'pointer' });
     this.debugCopyBtn.on('pointerdown', () => {
       const lines = [];
-      lines.push('// ZONE POSITIONS - paste into casino.js ZONES array');
+      lines.push('// ZONE POSITIONS v202604182150 - paste into casino.js ZONES array');
       for (const zone of ZONES) {
         lines.push(`  { id:'${zone.id}', x:${zone.x}, y:${zone.y}, w:${zone.w}, h:${zone.h} },`);
       }
@@ -1180,3 +1180,4 @@ async function startGame() {
 }
 
 startGame();
+
