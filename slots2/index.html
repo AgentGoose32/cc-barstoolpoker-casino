@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="assets/css/main.css">
   <script>
-  localStorage.clear();
   var slotMachineConfig = {
     balance: 100000,
     balance: 1000000,
@@ -1186,6 +1185,20 @@
     });
 
   })();
+  </script>
+  <script src="../casino-stats.js?v=20260419cms1"></script>
+  <script>
+    if (window.CasinoStats) {
+      window.CasinoStats.init({
+        gameId: 'slots2',
+        gameLabel: 'Slots',
+        balanceGetter: () => {
+          const raw = localStorage.getItem('smg-balance');
+          return raw == null ? null : Number(raw);
+        },
+        pollMs: 900
+      });
+    }
   </script>
 </body>
 </html>
