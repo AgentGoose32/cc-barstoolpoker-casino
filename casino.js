@@ -37,12 +37,12 @@ function angleTo8Dir(angleRad) {
 const ZONES = [
   { id: 'roulette',  label: 'Roulette',             x: 224, y: 295, w: 146, h:  53, type: 'game',        url: './roulette.html' },
   { id: 'blackjack1',label: 'Blackjack',            x: 214, y: 455, w: 105, h:  41, type: 'game',        url: './blackjack.html' },
-  { id: 'uth',       label: "Ultimate Texas\nHold'em", x: 669, y: 471, w: 94, h: 58, type: 'game',       url: './uth-test.html' },
-  { id: 'crash',     label: 'Dragon Crash',         x: 450, y: 430, w:  51, h:  96, type: 'game',        url: './crash.html' },
+  { id: 'uth',       label: "Ultimate Texas\nHold'em", x: 669, y: 471, w:  94, h:  58, type: 'game',    url: './uth-test.html' },
+  { id: 'crash',     label: 'Dragon Crash',         x: 440, y: 654, w:  60, h: 109, type: 'game',        url: './crash.html' },
   { id: 'kong',      label: 'Kong',                 x: 673, y: 654, w:  51, h:  96, type: 'game',        url: './kong.html' },
   { id: 'craps',     label: 'Craps',                x: 679, y: 299, w: 132, h:  58, type: 'game',        url: './craps.html' },
   { id: 'slots',     label: 'Slots',                x: 203, y: 643, w:  59, h: 108, type: 'game',        url: './slots2/' },
-  { id: 'scratch',   label: 'Lucky Scratch',        x: 449, y: 123, w:  85, h:  65, type: 'game',        url: './scratch.html' },
+  { id: 'scratch',   label: 'Lucky Scratch',        x: 443, y: 135, w:  99, h:  89, type: 'game',        url: './scratch.html' },
   { id: 'bar',       label: 'Bar',                  x: 480, y:  54, w: 705, h: 140, type: 'coming_soon' }
 ];
 
