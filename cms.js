@@ -20,6 +20,25 @@
     return 'metric-neutral';
   }
 
+  function houseValue(value) {
+    return 0 - Number(value || 0);
+  }
+
+  function normalizeGame(game) {
+    const events = (game.events || []).map((event) => ({
+      ...event,
+      houseDelta: houseValue(event.delta),
+      houseNet: event.net == null ? null : houseValue(event.net)
+    }));
+
+    return {
+      ...game,
+      houseNet: houseValue(game.totals.net || 0),
+      lastHouseNet: game.totals.lastNet == null ? null : houseValue(game.totals.lastNet),
+      events
+    };
+  }
+
   function renderDeepDive(game) {
     if (!game) {
       deepDiveTitleEl.textContent = 'Deep dive';
@@ -33,14 +52,14 @@
     const rows = events.length
       ? events.map((event) => {
           const time = new Date(event.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-          const deltaClass = metricClass(event.delta || 0);
+          const deltaClass = metricClass(event.houseDelta || 0);
           return `
             <tr>
               <td>${time}</td>
               <td>${event.type || 'event'}</td>
-              <td class="${deltaClass}">${fmt(event.delta || 0)}</td>
+              <td class="${deltaClass}">${fmt(event.houseDelta || 0)}</td>
               <td>${event.balance == null ? '—' : fmt(event.balance)}</td>
-              <td>${event.net == null ? '—' : fmt(event.net)}</td>
+              <td>${event.houseNet == null ? '—' : fmt(event.houseNet)}</td>
               <td>${event.round == null ? '—' : event.round}</td>
               <td>${event.note || '—'}</td>
             </tr>
@@ -51,12 +70,12 @@
     deepDiveBodyEl.innerHTML = `
       <div class="deep-dive-summary">
         <div>
-          <div class="metric-total ${metricClass(game.totals.net || 0)}">${fmt(game.totals.net || 0)}</div>
+          <div class="metric-total ${metricClass(game.houseNet || 0)}">${fmt(game.houseNet || 0)}</div>
           <div class="metric-sub">${game.totals.eventCount || 0} tracked events today</div>
         </div>
         <div class="event-meta">
-          Last balance: ${game.totals.lastBalance == null ? '—' : fmt(game.totals.lastBalance)}<br>
-          Last net: ${game.totals.lastNet == null ? '—' : fmt(game.totals.lastNet)}
+          Last player balance: ${game.totals.lastBalance == null ? '—' : fmt(game.totals.lastBalance)}<br>
+          Last house net: ${game.lastHouseNet == null ? '—' : fmt(game.lastHouseNet)}
         </div>
       </div>
       <table class="events-table">
@@ -64,9 +83,9 @@
           <tr>
             <th>Time</th>
             <th>Type</th>
-            <th>Delta</th>
-            <th>Balance</th>
-            <th>Net</th>
+            <th>House Delta</th>
+            <th>Player Balance</th>
+            <th>House Net</th>
             <th>Round</th>
             <th>Note</th>
           </tr>
@@ -78,27 +97,30 @@
 
   function render() {
     const summary = window.CasinoStats.getTodaySummary();
-    totalEl.textContent = fmt(summary.totalNet || 0);
-    totalEl.className = `metric-total ${metricClass(summary.totalNet || 0)}`;
+    const games = (summary.games || []).map(normalizeGame).sort((a, b) => (b.houseNet || 0) - (a.houseNet || 0));
+    const totalHouseNet = games.reduce((sum, game) => sum + (Number(game.houseNet) || 0), 0);
+
+    totalEl.textContent = fmt(totalHouseNet || 0);
+    totalEl.className = `metric-total ${metricClass(totalHouseNet || 0)}`;
     metaEl.textContent = `${summary.eventCount || 0} tracked events across ${summary.games.length || 0} games today (${summary.dayKey}).`;
 
-    if (!summary.games.length) {
+    if (!games.length) {
       listEl.innerHTML = '<div class="empty-state">No game stats tracked yet today. Play a game, then refresh this page.</div>';
       renderDeepDive(null);
       return;
     }
 
-    if (!selectedGameId || !summary.games.some((game) => game.id === selectedGameId)) {
-      selectedGameId = summary.games[0].id;
+    if (!selectedGameId || !games.some((game) => game.id === selectedGameId)) {
+      selectedGameId = games[0].id;
     }
 
-    listEl.innerHTML = summary.games.map((game) => {
+    listEl.innerHTML = games.map((game) => {
       const active = game.id === selectedGameId ? 'active' : '';
       return `
         <button class="game-card ${active}" type="button" data-game-id="${game.id}">
           <div class="game-card-top">
             <strong>${game.label}</strong>
-            <span class="${metricClass(game.totals.net || 0)}">${fmt(game.totals.net || 0)}</span>
+            <span class="${metricClass(game.houseNet || 0)}">${fmt(game.houseNet || 0)}</span>
           </div>
           <small>${game.totals.eventCount || 0} events today</small>
         </button>
@@ -112,7 +134,7 @@
       });
     });
 
-    renderDeepDive(summary.games.find((game) => game.id === selectedGameId) || null);
+    renderDeepDive(games.find((game) => game.id === selectedGameId) || null);
   }
 
   clearAllBtn.addEventListener('click', function () {
