@@ -1100,5 +1100,16 @@ createProbes();
 window.addEventListener('load', ()=>{ syncCanvasSize(); drawWheel(); });
 window.addEventListener('resize', ()=>{ syncCanvasSize(); drawWheel(); });
 </script>
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'roulette',
+    gameLabel: 'Roulette',
+    balanceGetter: () => balance,
+    pollMs: 700
+  });
+}
+</script>
 </body>
 </html>

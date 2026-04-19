@@ -832,5 +832,18 @@ document.addEventListener('keydown', function(e) {
   }
 });
 </script>
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'ultimate-texas-holdem',
+    gameLabel: 'Ultimate Texas Holdem',
+    balanceGetter: () => balance,
+    netGetter: () => netPL,
+    roundGetter: () => hands,
+    pollMs: 700
+  });
+}
+</script>
 </body>
 </html>

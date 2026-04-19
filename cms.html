@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casino CMS | Heroes of Holdem</title>
+  <link rel="stylesheet" href="./cms.css?v=20260419cms1" />
+</head>
+<body class="cms-body">
+  <div class="cms-shell">
+    <div class="cms-topbar">
+      <div>
+        <h1>Casino CMS</h1>
+        <p>Today’s local stats, by game, with quick drilldown.</p>
+      </div>
+      <div class="cms-actions">
+        <a class="cms-btn" href="./index.html">Back to casino</a>
+        <button id="clearAllBtn" class="cms-btn danger" type="button">Clear All</button>
+      </div>
+    </div>
+
+    <div class="cms-grid">
+      <section class="cms-panel">
+        <h2>Today overview</h2>
+        <div id="todayTotal" class="metric-total metric-neutral">0g</div>
+        <div id="todayMeta" class="metric-sub">No tracked events yet.</div>
+        <div style="height:18px"></div>
+        <h3>Profit / loss by game</h3>
+        <div id="gameList" class="game-list"></div>
+      </section>
+
+      <section class="cms-panel">
+        <h2 id="deepDiveTitle">Deep dive</h2>
+        <div id="deepDiveBody" class="empty-state">Click a game to inspect today’s tracked events.</div>
+      </section>
+    </div>
+  </div>
+
+  <script src="./casino-stats.js?v=20260419cms1"></script>
+  <script src="./cms.js?v=20260419cms1"></script>
+</body>
+</html>

@@ -1939,6 +1939,18 @@ window._bgDebugScale = 1.00;
 })();
 </script>
 
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'dragon-crash',
+    gameLabel: 'Dragon Crash',
+    balanceGetter: () => gameState.balance,
+    pollMs: 700
+  });
+}
+</script>
+
 
 
 

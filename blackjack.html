@@ -763,5 +763,18 @@ document.addEventListener('keydown',e=>{ if(e.key==='d'||e.key==='D'){ const p=d
 })();
 newGame();
 </script>
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'blackjack',
+    gameLabel: 'Blackjack',
+    balanceGetter: () => balance,
+    netGetter: () => netPL,
+    roundGetter: () => handsCount,
+    pollMs: 700
+  });
+}
+</script>
 </body>
 </html>

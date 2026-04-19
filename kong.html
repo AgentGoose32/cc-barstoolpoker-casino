@@ -1194,8 +1194,19 @@ renderActions();
 renderRulesDisp();
 </script>
 
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'kong',
+    gameLabel: 'Kong',
+    balanceGetter: () => balance,
+    pollMs: 700
+  });
+}
+</script>
+
 
 
 </body>
 </html>
-

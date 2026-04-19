@@ -4464,12 +4464,24 @@ applyDicePos();
 <div id="diceMarkerStart"></div>
 
 
+<script src="./casino-stats.js?v=20260419cms1"></script>
+<script>
+if (window.CasinoStats) {
+  window.CasinoStats.init({
+    gameId: 'craps',
+    gameLabel: 'Craps',
+    balanceGetter: () => balance,
+    balanceSelector: '#balDisplay',
+    pollMs: 700
+  });
+}
+</script>
+
 </body>
 
 
 
 </html>
-
 
 
 
