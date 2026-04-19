@@ -50,21 +50,27 @@
       .replace(/'/g, '&#39;');
   }
 
-  function renderPlayerBreakdown(event) {
-    const players = event.details && Array.isArray(event.details.players) ? event.details.players : [];
+  function parseAmountText(amountText) {
+    const cleaned = String(amountText || '').replace(/[^0-9.+-]/g, '');
+    const num = Number(cleaned);
+    return Number.isFinite(num) ? num : 0;
+  }
+
+  function renderPlayerGroup(title, players, emptyText) {
     if (!players.length) {
-      return '<div class="event-detail-empty">No individual player breakdown stored for this event.</div>';
+      return `<div class="player-group"><div class="player-group-title">${escapeHtml(title)}</div><div class="event-detail-empty">${escapeHtml(emptyText)}</div></div>`;
     }
 
     return `
-      <div class="player-breakdown">
-        <div class="player-breakdown-title">Players in this event</div>
+      <div class="player-group">
+        <div class="player-group-title">${escapeHtml(title)} <span>${players.length}</span></div>
         <div class="player-list">
           ${players.map((player) => {
             const amount = player.amountText || '—';
-            const amountClass = amount.trim().startsWith('-') ? 'metric-negative' : 'metric-positive';
+            const amountValue = parseAmountText(amount);
+            const amountClass = amountValue < 0 ? 'metric-negative' : 'metric-positive';
             return `
-              <div class="player-card">
+              <div class="player-card ${amountValue < 0 ? 'player-card-loss' : 'player-card-win'}">
                 <div class="player-card-top">
                   <strong>${escapeHtml(player.name || 'Unknown')}</strong>
                   <span class="${amountClass}">${escapeHtml(amount)}</span>
@@ -76,6 +82,47 @@
               </div>
             `;
           }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPlayerBreakdown(event) {
+    const players = event.details && Array.isArray(event.details.players) ? event.details.players : [];
+    if (!players.length) {
+      return '<div class="event-detail-empty">No individual player breakdown stored for this event.</div>';
+    }
+
+    const winners = players.filter((player) => parseAmountText(player.amountText) > 0);
+    const losers = players.filter((player) => parseAmountText(player.amountText) < 0);
+    const playerWinTotal = winners.reduce((sum, player) => sum + parseAmountText(player.amountText), 0);
+    const playerLossTotal = losers.reduce((sum, player) => sum + Math.abs(parseAmountText(player.amountText)), 0);
+    const playerNet = players.reduce((sum, player) => sum + parseAmountText(player.amountText), 0);
+    const houseNet = 0 - playerNet;
+
+    return `
+      <div class="player-breakdown">
+        <div class="player-breakdown-top">
+          <div class="player-breakdown-title">Players in this event</div>
+          <div class="player-breakdown-sub">${players.length} total players tracked</div>
+        </div>
+        <div class="player-summary-grid">
+          <div class="player-summary-card">
+            <div class="player-summary-label">Player wins paid out</div>
+            <div class="player-summary-value metric-negative">${fmt(0 - playerWinTotal)}</div>
+          </div>
+          <div class="player-summary-card">
+            <div class="player-summary-label">Player losses collected</div>
+            <div class="player-summary-value metric-positive">${fmt(playerLossTotal)}</div>
+          </div>
+          <div class="player-summary-card">
+            <div class="player-summary-label">House net for this event</div>
+            <div class="player-summary-value ${metricClass(houseNet)}">${fmt(houseNet)}</div>
+          </div>
+        </div>
+        <div class="player-groups-grid">
+          ${renderPlayerGroup('Winners', winners, 'No winners captured in this event.')}
+          ${renderPlayerGroup('Losers', losers, 'No losers captured in this event.')}
         </div>
       </div>
     `;
